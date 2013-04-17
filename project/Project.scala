@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import com.typesafe.startscript.StartScriptPlugin
+import com.typesafe.sbt.SbtStartScript
 
 //TODO change the name of the object to reflect your project name.
 object ScalabootBuild extends Build {
@@ -11,6 +11,7 @@ object ScalabootBuild extends Build {
     ScalaToolsSnapshots,
 
     // common deps
+    "Wajam" at "http://ci1.cx.wajam/",
     "Maven.org" at "http://repo1.maven.org/maven2",
     "Sun Maven2 Repo" at "http://download.java.net/maven/2",
     "Scala-Tools" at "http://scala-tools.org/repo-releases/",
@@ -18,7 +19,7 @@ object ScalabootBuild extends Build {
     "Oracle Maven2 Repo" at "http://download.oracle.com/maven",
     "Sonatype" at "http://oss.sonatype.org/content/repositories/release",
     "spy" at "http://files.couchbase.com/maven2/",
-    "Wajam" at "http://ci1.is.wajam/"
+    "Twitter" at "http://maven.twttr.com/"
   )
 
   var commonDeps = Seq(
@@ -34,7 +35,8 @@ object ScalabootBuild extends Build {
     retrieveManaged := true,
     publishMavenStyle := true,
     organization := "com.wajam",
-    version := "0.1-SNAPSHOT"
+    version := "0.1-SNAPSHOT",
+    scalaVersion := "2.9.1"
   )
 
   lazy val root = Project(PROJECT_NAME, file("."))
@@ -42,7 +44,7 @@ object ScalabootBuild extends Build {
     .settings(defaultSettings: _*)
     .settings(testOptions in IntegrationTest := Seq(Tests.Filter(s => s.contains("Test"))))
     .settings(parallelExecution in IntegrationTest := false)
-    .settings(StartScriptPlugin.startScriptForClassesSettings: _*)
+    .settings(SbtStartScript.startScriptForClassesSettings: _*)
     .aggregate(core)
 
   lazy val core = Project(PROJECT_NAME+"-core", file(PROJECT_NAME+"-core"))
@@ -50,5 +52,5 @@ object ScalabootBuild extends Build {
     .settings(defaultSettings: _*)
     .settings(testOptions in IntegrationTest := Seq(Tests.Filter(s => s.contains("Test"))))
     .settings(parallelExecution in IntegrationTest := false)
-    .settings(StartScriptPlugin.startScriptForClassesSettings: _*)
+    .settings(SbtStartScript.startScriptForClassesSettings: _*)
 }

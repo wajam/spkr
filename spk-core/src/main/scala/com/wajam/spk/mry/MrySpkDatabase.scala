@@ -11,7 +11,7 @@ import com.wajam.spk.config.SpkConfig
  * When instanciating the database components, if the tables do not exist in the database, the mry framework
  * will create them.
  */
-class MrySpkDatabase(config: SpkConfig) extends ConsistentDatabase[MysqlStorage]() {
+class MrySpkDatabase(name:String, config: SpkConfig) extends ConsistentDatabase[MysqlStorage](name) {
 
   val mysqlStorage = new MysqlStorage(MysqlStorageConfiguration(MrySpkDatabaseModel.STORE_TYPE,
     config.getMryMysqlServer,
@@ -35,13 +35,15 @@ class MrySpkDatabase(config: SpkConfig) extends ConsistentDatabase[MysqlStorage]
 }
 
 object MrySpkDatabaseModel extends Model {
+  //name necessary to call right storage, but multiple storage not supported at the moment when using consistencyMasterSlave for replication.
     val STORE_TYPE = "mysql"
-    val MEMBER_TABLE = "member"
-    val SUBSCRIPTION_TABLE = "subscription"
-    val SUBSCRIBER_TABLE = "subscriber"
-    val FEEDMESSAGE_TABLE = "feedMessage"
-    val POSTMESSAGE_TABLE = "postMessage"
-    val NAME_TABLE = "name"
+
+    val MEMBER_TABLE = "members"
+    val SUBSCRIPTION_TABLE = "subscriptions"
+    val SUBSCRIBER_TABLE = "subscribers"
+    val FEEDMESSAGE_TABLE = "feedMessages"
+    val POSTMESSAGE_TABLE = "postMessages"
+    val NAME_TABLE = "names"
 
   val tableMember = addTable(new Table(MEMBER_TABLE))
   val tableSubscription = tableMember.addTable(new Table(SUBSCRIPTION_TABLE))

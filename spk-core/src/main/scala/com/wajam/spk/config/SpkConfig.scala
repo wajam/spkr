@@ -11,6 +11,12 @@ class SpkConfig(config: Configuration) {
   def getMryMysqlDb: String = config.getString("spk.mry.mysql.schema")
   def getMryMysqlUsername: String = config.getString("spk.mry.mysql.username")
   def getMryMysqlPassword: String = config.getString("spk.mry.mysql.password")
+
+  def getNrvListenPort: Int = config.getInt("spk.nrv.listen.port")
+  def getSpkListenPort: Int = config.getInt("spk.http.listen.port")
+  def getSpkListenAddress: String = config.getString("spk.listen.address")
+
+  def getZookeeperServers: String = config.getStringArray("spk.nrv.zookeeper.servers").mkString(",")
 }
 
 /**

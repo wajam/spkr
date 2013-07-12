@@ -81,7 +81,7 @@ object Spk extends App with Logging {
     scnClient.fetchTimestamps(mrySpkServiceName, (_, _) => Unit, 1, 0)
 
     // Spk service
-    val consistency = new ConsistencyMasterSlave(scnClient, "./logs", false) //This in necessary to write in mry (consistent db)
+    val consistency = new ConsistencyMasterSlave(scnClient, "./logs", false) //This is necessary to write in mry (consistent db)
     cluster.registerService(mryDb)
     mryDb.applySupport(switchboard = Some(new Switchboard("mry", 200, 50, 30000L, 0.40)), consistency = Some(consistency))
     consistency.bindService(mryDb)

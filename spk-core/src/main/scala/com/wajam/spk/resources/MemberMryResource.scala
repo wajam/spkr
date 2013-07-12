@@ -2,9 +2,12 @@ package com.wajam.spk.resources
 
 import com.wajam.nrv.data.InMessage
 import com.wajam.spk.mry.{MrySpkDatabaseModel, MrySpkDatabase}
-import com.wajam.mry.execution.{MapValue, Value, OperationApi}
+import com.wajam.mry.execution._
 import com.wajam.mry.execution.Implicits._
 import com.wajam.scn.client.ScnClient
+import com.wajam.spk.json.JsonConverter
+import com.wajam.spk.mry.model.Member
+import com.wajam.mry.execution.MapValue
 
 /**
  *
@@ -12,46 +15,57 @@ import com.wajam.scn.client.ScnClient
 class MemberMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryResource(db,scn) {
 
   // All the fields associated with a member
-  val id = "member_id"
-  val displayName = "display_name"
+  val model = Member
 
   /**
-   *
+   *  Gets all the info associated to a member based on a username.
+   *  Note: this may also be used to validate the existence of a member.
    */
   override def get(request: InMessage) {
     println("Received GET request on member resource... " + request)
     db.execute(b => {
-      b.returns(b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(getValidatedNumericKey(request, id)))
+      b.returns(b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE)
+        .get(getValidatedKey(request, model.username)))
     }).
       onFailure (handleFailures(request)).
-      onSuccess { case Seq(MapValue(member), _*) => {
-      //TODO: somehow parse the mry structure into a Json Map before it is sent.
-      //member.map((s,v) => (s.toString -> v.toString))
-      //case user: MapValue => request.respond(JsonConverter.toJsonObject(user, model, request.getProjection))
-        request.reply(Map(), RESPONSE_HEADERS, Map("member_keys_will_be_here" -> "and_other_fields_here"))
+      onSuccess {
+      case Seq(MapValue(member), _*) => {
+        this.respond(request, JsonConverter.toJsonObject(member, model))
+      }
+      case _ => {
+        this.respondNotFound(request,"Requested username not found")
       }
     }
   }
 
+
+
   /**
+   *  Inserts a new member in the database.
+   *  Note: No validation is performed. Inserting a new member using an already existing username will succeed.
+   *  Since updates in mry are basically new inserts (to prevent db locks), the scenario described will caused the
+   *  inserted member to behave as an updated version of the previously exising member with the same username.
    *
    */
   override def create(request: InMessage) {
     println("Received CREATE request on member resource..." + request.toString)
 
-    /**
-     * TODO: convert body from JSon to something usable.
-     */
-    val member = Map[String,Any](displayName -> "Gustave")
-
-    insertWithScnSequence(db, scn, request, id, id, member,
-      keyPrefix = "",
-      tableAccessor = (b: OperationApi) => {
-        b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE)
-      }, callback = (value) => {
-        //println("call back called!!! got this data: " + value)
-        //TODO: percolate here (timeline)
+    val member = convertJsonValue(getJsonBody(request), model)
+    member.get(model.username) match {
+      case Some(username) => {
+        insertWithKey(db,  request, username.toString, member,
+          tableAccessor = (b: OperationApi) => {
+            b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE)
+          },
+          callback = (value) => {
+            this.respond(request, JsonConverter.toJsonObject(value, model))
+            //TODO: percolate here (timeline)
+          }
+        )
       }
-    )
+      case None =>
+        request.replyWithError(new IllegalArgumentException("A username must be specified."))
+    }
+
   }
 }

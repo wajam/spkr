@@ -6,10 +6,11 @@ import com.wajam.spk.config.SpkConfig
 
 
 /**
- * A custom MySQL data store implementation using the mry framework abstractions. This class adds table
- * definitions and targets the database using the configuration file.
- * When instanciating the database components, if the tables do not exist in the database, the mry framework
- * will create them.
+ * A custom MySQL data store implementation using the mry framework abstractions.
+ * A ConsistentDatabase is a type of distributed Service (nrv), define in mry as a distributed store.
+ * This class adds table definitions and creates the database using the configuration file.
+ * When instanciating the database components, if the tables do not exist in the database, the mry super
+ * class implementation will create them.
  */
 class MrySpkDatabase(name:String, config: SpkConfig) extends ConsistentDatabase[MysqlStorage](name) {
 
@@ -35,21 +36,22 @@ class MrySpkDatabase(name:String, config: SpkConfig) extends ConsistentDatabase[
 }
 
 object MrySpkDatabaseModel extends Model {
-  //name necessary to call right storage, but multiple storage not supported at the moment when using consistencyMasterSlave for replication.
+    // The store type is a name necessary to target the right storage, but multiple storage when using
+    // consistencyMasterSlave for replication support is not yet implemented .
     val STORE_TYPE = "mysql"
 
     val MEMBER_TABLE = "members"
     val SUBSCRIPTION_TABLE = "subscriptions"
     val SUBSCRIBER_TABLE = "subscribers"
-    val FEEDMESSAGE_TABLE = "feedMessages"
-    val POSTMESSAGE_TABLE = "postMessages"
+    val FEED_MESSAGE_TABLE = "feedMessages"
+    val POST_MESSAGE_TABLE = "postMessages"
     val NAME_TABLE = "names"
 
   val tableMember = addTable(new Table(MEMBER_TABLE))
   val tableSubscription = tableMember.addTable(new Table(SUBSCRIPTION_TABLE))
   val tableSubscribers = tableMember.addTable(new Table(SUBSCRIBER_TABLE))
-  val tableFeedMessage = tableMember.addTable(new Table(FEEDMESSAGE_TABLE))
-  val tablePostMessage = tableMember.addTable(new Table(POSTMESSAGE_TABLE))
+  val tableFeedMessage = tableMember.addTable(new Table(FEED_MESSAGE_TABLE))
+  val tablePostMessage = tableMember.addTable(new Table(POST_MESSAGE_TABLE))
 
   val tableName = addTable(new Table(NAME_TABLE))
 }

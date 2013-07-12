@@ -4,10 +4,11 @@ import com.wajam.nrv.service._
 import com.wajam.nrv.protocol.{Protocol}
 import com.wajam.nrv.data.InMessage
 import scala.Some
-import com.wajam.spk.resources.{ResponseHeader, MemberMryResource}
+import com.wajam.spk.resources._
 import com.wajam.scn.client.ScnClient
 import com.wajam.nrv.utils.{SynchronizedIdGenerator, TimestampIdGenerator}
 import com.wajam.nrv.utils.timestamp.Timestamp
+import scala.Some
 
 /**
  * Concrete service implementation for the spk_http service. This service handles http requests through a REST API by
@@ -22,11 +23,18 @@ class SpkService(name: String, database: MrySpkDatabase, protocol: Protocol, scn
 
   // Resources define the exact behavior of evey possible http call
   val memberResource = new MemberMryResource(database,scn)
+  val subscriptionResource = new MemberSubscriptionMryResource(database,scn)
+  val postMessageResource = new MemberMessageMryResource(database,scn)
+  val feedMessageResource = new MemberFeedMryResource(database,scn)
 
   // Each possible http path is mapped with a unique Action, which calls the appropriate resource behavior.
   registerAction(new Action(SpkService.memberWithId, handleException(msg => { memberResource.get(msg)}), ActionMethod.GET))
   registerAction(new Action(SpkService.member, handleException(msg => { memberResource.create(msg)}), ActionMethod.POST))
   registerAction(new Action(SpkService.member, handleException(msg => { memberResource.get(msg)}), ActionMethod.GET))
+  registerAction(new Action(SpkService.memberSubscription, handleException(msg => { subscriptionResource.create(msg)}), ActionMethod.POST))
+  registerAction(new Action(SpkService.memberSubscription, handleException(msg => { subscriptionResource.get(msg)}), ActionMethod.GET))
+  registerAction(new Action(SpkService.memberPostMessage, handleException(msg => { postMessageResource.create(msg)}), ActionMethod.POST))
+  registerAction(new Action(SpkService.memberFeedMessage, handleException(msg => { feedMessageResource.get(msg)}), ActionMethod.GET))
 
   // A method used to wrap the resource behavior with error handling.
   private def handleException(handler: InMessage => Unit):(InMessage=>Unit) = {
@@ -36,7 +44,7 @@ class SpkService(name: String, database: MrySpkDatabase, protocol: Protocol, scn
       } catch  {
         case e:Exception =>
           msg.replyWithError(e, Map(), ResponseHeader.RESPONSE_HEADERS, Map("error" -> "Other error: %s".format(e.toString)))
-          println("Error! unable to handle API call.")
+          println("Error! unable to handle API call. " + e.toString)
       }
     }
   }
@@ -71,10 +79,10 @@ object SpkService {
   // Here are all the actions supported by the HTTP REST API for each and every ressources:
   val test = "/status"
   val member = "/members"
-  val memberWithId = "/members/:member_id"
-  val memberSubscription = "/members/:member_id/subscriptions"
-  val memberSubscriber = "/members/:member_id/subscribers"
-  val memberFeed = "/members/:member_id/feeds"
-  val memberMessage = "/members/:member_id/messages"
+  val memberWithId = "/members/:username"
+  val memberSubscription = "/members/:username/subscriptions"
+  val memberSubscriber = "/members/:username/subscribers"
+  val memberFeedMessage = "/members/:username/feeds"
+  val memberPostMessage = "/members/:username/messages"
   val nameWithName = "/names/:display_name"
 }

@@ -6,6 +6,12 @@ import com.wajam.mry.execution.Implicits._
 import com.wajam.spk.mry.MrySpkDatabase
 import com.wajam.mry.Database
 import com.wajam.scn.client.ScnClient
+import com.wajam.spk.mry.model.{PropertyType, Model}
+import net.liftweb.json._
+import com.wajam.mry.execution.MapValue
+import scala.Some
+import com.wajam.nrv.data.MList
+import com.wajam.nrv.data.MString
 
 /**
  * This trait offers a template for the creation of additionnal resources. It offers an interface to
@@ -13,7 +19,7 @@ import com.wajam.scn.client.ScnClient
  * call must be defined in every concrete Resource.
  *
  */
-abstract class MryResource(protected val db: MrySpkDatabase, scn: ScnClient) extends MessageHelper with ParamExtractor with DatabaseHelper {
+abstract class MryResource(protected val db: MrySpkDatabase, scn: ScnClient) extends MessageHelper with ParamExtractor with DatabaseHelper with JsonHelper {
 
   /**
    * Respond to GET resource/
@@ -69,16 +75,20 @@ trait MessageHelper {
     request.reply(Map(), RESPONSE_HEADERS, Map("error" -> "Conflict: %s".format(description)), code = 409)
   }
   protected def respondError(request: InMessage, description: String = " ") {
-    request.reply(Map(), RESPONSE_HEADERS, Map("error" -> "Other error: %s".format(description)), code = 200)
+    request.reply(Map(), RESPONSE_HEADERS, Map("error" -> "Other error: %s".format(description)), code = 400)
   }
   protected def respondEmptySuccess(request: InMessage) {
     request.reply(Map(), RESPONSE_HEADERS, Map(), code = 200)
+  }
+  protected def respond(request: InMessage, data: Any, code: Int = 200) {
+    request.reply(Map(), RESPONSE_HEADERS, data, code)
   }
 
   /**
    * This will handle the Futur (asynchronous call) to mry in a failure case
    */
   def handleFailures(request: InMessage): PartialFunction[Throwable, Unit] = {
+
     case NotFoundException(elem) => respondNotFound(request, elem)
     case ConflictException(value) => respondConflict(request, value.toString)
     case e: Exception => respondError(request, e.toString)
@@ -146,33 +156,92 @@ trait DatabaseHelper {
                                       callback: (Value) => Unit, keyPrefix: String = "") {
     var newObj = resObj
 
-    // Insert function
-    def insert(key: String, newObj: Map[String, Any], callback: (Value) => Unit) {
+    // Insert with scn key
+    scn.fetchSequenceIds(sequenceName, (sequence: Seq[Long], optException) => {
+      optException.headOption match {
+        case e: Exception => request.replyWithError(e)
+        case _ => {
+          val key = keyPrefix + sequence(0)
+          newObj += (keyName -> key)
+          insertWithKey(db, request, key, newObj, tableAccessor, callback)
+        }
+      }
+    }, 1, request.token)
+  }
+
+  protected def insertWithKey(db:MrySpkDatabase, request: InMessage, key: String, newObj: Map[String, Any],
+                              tableAccessor: (OperationApi) => Variable, callback: (Value) => Unit) {
       db.execute(b => {
         val table = tableAccessor(b)
         table.set(key, newObj)
         b.returns(table.get(key))
       }, (values, optException) => {
-        replyException(request,optException)
-        callback(values.headOption.getOrElse(""))
-      })
-    }
+        optException.headOption match {
+          case e: Exception => request.replyWithError(e)
+          case _ => {
+            callback(values.headOption.getOrElse(""))
+          }
+        }
+      }
+    )
+  }
+}
+trait JsonHelper {
 
-    // Insert Index
-    scn.fetchSequenceIds(sequenceName, (sequence: Seq[Long], optException) => {
-      replyException(request,optException)
-      val key = keyPrefix + sequence(0)
-      newObj += (keyName -> key)
-      insert(key, newObj, callback)
-    }, 1, request.token)
+  protected def getJsonBody(request: InMessage) = {
+    request.getData[JObject]
+  }
+  protected def convertJsonValue(json: JObject, model: Model): Map[String, Any] = {
+    json.values.filter(e => {
+      model.definition.contains(e._1)
+    }) map (e => {
+      (e._1 -> convertFieldValue(e._1, e._2, model))
+    })
   }
 
-
-
-  def replyException(request:InMessage, optException: Option[Exception]) {
-    optException match {
-      case e: Exception => request.replyWithError(e)
-      case _ =>
+  /**
+   * Convert field value to useable type
+   */
+  protected def convertFieldValue(key: String, value: Any, model: Model) = {
+    model.definition(key) match {
+      case PropertyType.Number => value match {
+        case s: String => s.toLong
+        case bi: BigInt => bi.longValue()
+        case _ => value.toString.toLong
+      }
+      case PropertyType.Float => value match {
+        case s: String => s.toDouble
+        case bd: BigDecimal => bd.toDouble
+        case d: Double => d
+        case _ => value.toString.toDouble
+      }
+      case PropertyType.Bool => value match {
+        case s: String => Seq("true", "1").contains(s)
+        case i: Int => (i == 1)
+        case b: Boolean => b
+        case bi: BigInt => (bi.intValue() == 1)
+        case _ => value.toString.toBoolean
+      }
+      case PropertyType.Date => value match {
+        case s: String => if (s.isEmpty) {
+          Model.DEFAULT_DATE
+        } else {
+          s
+        }
+        case _ => value.toString
+      }
+      case PropertyType.MapList => value match {
+        case seq: Seq[Map[String, String]] => seq
+        case map: Map[String, String] => Seq(map)
+      }
+      case PropertyType.StringList => value match {
+        case seq: Seq[String] => seq
+        case str: String => str :: Nil
+      }
+      case _ => value.toString
     }
   }
 }
+
+
+

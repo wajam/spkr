@@ -91,7 +91,7 @@ object Spk extends App with Logging {
      * This method is called in a shutdown hook to shutdown dependencies. Although it is not necessary to execute this
      * when running a single node, it is generally a good idea to call it when shutting down a single node in a larger
      * cluster. Calling this method will allow all critical tasks, such as the data replication (not used in this application)
-     * to end properly.
+     * to terminate properly.
      */
     def stop() {
       println("stopping spk server...")

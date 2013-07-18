@@ -16,6 +16,8 @@ import org.apache.log4j.PropertyConfigurator
 import java.net.URL
 import com.wajam.nrv.Logging
 import com.wajam.nrv.extension.json.codec.JsonCodec
+import com.wajam.spk.mry.percolation.Percolator
+import com.wajam.spnl.ZookeeperTaskPersistenceFactory
 
 /**
  *  This main class creates and launch the spk server.
@@ -86,6 +88,9 @@ object Spk extends App with Logging {
     mryDb.applySupport(switchboard = Some(new Switchboard("mry", 200, 50, 30000L, 0.40)), consistency = Some(consistency))
     consistency.bindService(mryDb)
     cluster.registerService(new SpkService("api.spk", mryDb, spkProtocol,scnClient))
+
+    // Create the percolation manager for the spk service. It will hook itself to the database and start when the server member goes up.
+    new Percolator(mryDb,scnClient,new ZookeeperTaskPersistenceFactory(zookeeper))
 
     /**
      * This method is called in a shutdown hook to shutdown dependencies. Although it is not necessary to execute this

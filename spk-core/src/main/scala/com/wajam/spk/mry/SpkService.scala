@@ -9,6 +9,8 @@ import com.wajam.scn.client.ScnClient
 import com.wajam.nrv.utils.{SynchronizedIdGenerator, TimestampIdGenerator}
 import com.wajam.nrv.utils.timestamp.Timestamp
 import scala.Some
+import com.wajam.spk.mry.percolation.Percolator
+import com.wajam.spnl.TaskPersistenceFactory
 
 /**
  * Concrete service implementation for the spk_http service. This service handles http requests through a REST API by

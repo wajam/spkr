@@ -23,7 +23,7 @@ class MemberFeedMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryResou
   override def get(request: InMessage) {
     request.parameters.get("username") match {
       case (Some(MString(username))) => {
-        println("Received GET request on member_subscription resource... " + request)
+        println("Received GET request on member_feed resource... " + request)
         db.execute(b => {
           b.returns(b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(getValidatedKey(request, model.username))
             .from(MrySpkDatabaseModel.FEED_MESSAGE_TABLE).get())

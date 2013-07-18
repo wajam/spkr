@@ -66,6 +66,5 @@ class MemberMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryResource(
       case None =>
         request.replyWithError(new IllegalArgumentException("A username must be specified."))
     }
-
   }
 }

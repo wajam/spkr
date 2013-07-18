@@ -1,7 +1,7 @@
 package com.wajam.spk.mry.model
 
 /**
- * Member model definition
+ * Subscription model definition
  */
 
 object Subscription extends Model {

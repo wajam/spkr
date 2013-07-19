@@ -29,8 +29,8 @@ class MemberFeedMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryResou
             .from(MrySpkDatabaseModel.FEED_MESSAGE_TABLE).get())
         }).
           onFailure (handleFailures(request)).
-          onSuccess { case Seq(ListValue(subscriptions)) => {
-            this.respond(request, JsonConverter.toJsonList(subscriptions, model))
+          onSuccess { case Seq(ListValue(feedMessages)) => {
+            this.respond(request, JsonConverter.toJsonList(feedMessages, model))
           }
           case a => {
             println("Error! Unexpected data format.")

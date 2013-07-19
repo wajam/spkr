@@ -6,7 +6,7 @@ package com.wajam.spk.mry.model
  */
 
 object Feed extends Model {
-  // Key 1 from parent table, allows sharding on same node
+  // Key 1 from parent table, allows sharding on same node. Refers to the member that reads the messages on his feed.
   val username = "username"
   // Key 2, a unique identifier for each
   val feedId = "feed_id"

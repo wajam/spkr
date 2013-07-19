@@ -1,18 +1,18 @@
 package com.wajam.spk.mry
 
-import com.wajam.mry.ConsistentDatabase
+import com.wajam.mry.{Database, ConsistentDatabase}
 import com.wajam.mry.storage.mysql.{Table, Model, MysqlStorageConfiguration, MysqlStorage}
 import com.wajam.spk.config.SpkConfig
 
 
 /**
  * A custom MySQL data store implementation using the mry framework abstractions.
- * A ConsistentDatabase is a type of distributed Service (nrv), define in mry as a distributed store.
+ * A Database is a type of distributed Service (nrv), define in mry as a distributed store.
  * This class adds table definitions and creates the database using the configuration file.
  * When instanciating the database components, if the tables do not exist in the database, the mry super
  * class implementation will create them.
  */
-class MrySpkDatabase(name:String, config: SpkConfig) extends ConsistentDatabase[MysqlStorage](name) {
+class MrySpkDatabase(name:String, config: SpkConfig) extends Database(name) {
 
   val mysqlStorage = new MysqlStorage(MysqlStorageConfiguration(MrySpkDatabaseModel.STORE_TYPE,
     config.getMryMysqlServer,

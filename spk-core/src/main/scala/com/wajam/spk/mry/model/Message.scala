@@ -9,18 +9,21 @@ object Message extends Model {
   val username = "username"
   // Key 2, this will identify each message as a unique message
   val messageId = "message_id"
-  // Note that the author's display name is not necessary here. The name will be obtained through percolation, when the feed is aggregated.
+  // The author's display name simplifies the percolation, when the feed is aggregated.
+  val displayName = "message_display_name"
   val content = "message_content"
 
   val id = messageId
   val definition = Map(
     messageId -> PropertyType.Number,
     username -> PropertyType.String,
+    displayName -> PropertyType.String,
     content -> PropertyType.String
   )
 
   def defaultValues = Map[String, String] (
     username -> "",
+    displayName -> "",
     content -> ""
   )
 }

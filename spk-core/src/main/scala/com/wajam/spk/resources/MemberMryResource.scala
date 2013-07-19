@@ -38,8 +38,6 @@ class MemberMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryResource(
     }
   }
 
-
-
   /**
    *  Inserts a new member in the database.
    *  Note: No validation is performed. Inserting a new member using an already existing username will succeed.
@@ -53,13 +51,16 @@ class MemberMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryResource(
     val member = convertJsonValue(getJsonBody(request), model)
     member.get(model.username) match {
       case Some(username) => {
-        insertWithKey(db,  request, username.toString, member,
+        insertWithKey(db, username.toString, member,
           tableAccessor = (b: OperationApi) => {
             b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE)
           },
+          onError = (e: Exception) => {request.replyWithError(e)},
           callback = (value) => {
             this.respond(request, JsonConverter.toJsonObject(value, model))
-            //TODO: percolate here (timeline)
+            // Note: It would be possible to manually trigger the appropriate percolation here.
+            // This would reduce the delay until the data is percolated. The main percolation scheduled in spnl would
+            // act as a "fallback" if the percolation were to fail here. In any case, it is not necessary.
           }
         )
       }

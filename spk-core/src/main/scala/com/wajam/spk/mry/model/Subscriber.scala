@@ -6,13 +6,11 @@ package com.wajam.spk.mry.model
 
 object Subscriber extends Model {
   val username = "username"
-  val subscriberId = "subscriber_id"
   val subscriberUsername = "subscriber_username"
   val subscriberDisplayName = "subscriber_display_name"
 
-  val id = subscriberId
+  val id = subscriberUsername
   val definition = Map(
-    subscriberId -> PropertyType.Number,
     username -> PropertyType.String,
     subscriberUsername -> PropertyType.String,
     subscriberDisplayName -> PropertyType.String

@@ -20,9 +20,9 @@ import com.wajam.spk.mry.percolation.Percolator
 import com.wajam.spnl.ZookeeperTaskPersistenceFactory
 
 /**
- *  This main class creates and launch the spk server.
+ *  This main object creates and instance of edge server, and launches it.
+ *  Creating the server here allows us to add a hook on application shutdown, and to catch exceptions.
  */
-
 object Spk extends App with Logging {
   try {
     PropertyConfigurator.configureAndWatch(new URL(System.getProperty("log4j.configuration")).getFile, 5000)
@@ -83,13 +83,13 @@ object Spk extends App with Logging {
     scnClient.fetchTimestamps(mrySpkServiceName, (_, _) => Unit, 1, 0)
 
     // Spk service
-    val consistency = new ConsistencyMasterSlave(scnClient, "./logs", false) //This is necessary to write in mry (consistent db)
+    //val consistency =  new ConsistencyMasterSlave(scnClient, "./logs", false) //This is necessary to write in mry (consistent db)
     cluster.registerService(mryDb)
-    mryDb.applySupport(switchboard = Some(new Switchboard("mry", 200, 50, 30000L, 0.40)), consistency = Some(consistency))
-    consistency.bindService(mryDb)
+    mryDb.applySupport(switchboard = Some(new Switchboard("mry", 200, 50, 30000L, 0.40)))
+    //consistency.bindService(mryDb)
     cluster.registerService(new SpkService("api.spk", mryDb, spkProtocol,scnClient))
 
-    // Create the percolation manager for the spk service. It will hook itself to the database and start when the server member goes up.
+    // Create the percolation manager for the spk service. It will hook itself to the database and start when the right server member goes up.
     new Percolator(mryDb,scnClient,new ZookeeperTaskPersistenceFactory(zookeeper))
 
     /**

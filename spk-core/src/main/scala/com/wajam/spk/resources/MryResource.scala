@@ -151,33 +151,36 @@ object ResponseHeader {
 }
 
 trait DatabaseHelper {
-  protected def insertWithScnSequence(db:MrySpkDatabase, scn: ScnClient, request: InMessage, sequenceName: String, keyName: String,
-                                      resObj: Map[String, Any], tableAccessor: (OperationApi) => Variable,
+  protected def insertWithScnSequence(db:MrySpkDatabase, scn: ScnClient, token: Long,
+                                      onError: (Exception) => Unit,
+                                      sequenceName: String, keyName: String,
+                                      newRecord: Map[String, Any], tableAccessor: (OperationApi) => Variable,
                                       callback: (Value) => Unit, keyPrefix: String = "") {
-    var newObj = resObj
+    var newObj = newRecord
 
     // Insert with scn key
     scn.fetchSequenceIds(sequenceName, (sequence: Seq[Long], optException) => {
       optException.headOption match {
-        case e: Exception => request.replyWithError(e)
+        case e: Exception => onError(e)
         case _ => {
           val key = keyPrefix + sequence(0)
           newObj += (keyName -> key)
-          insertWithKey(db, request, key, newObj, tableAccessor, callback)
+          insertWithKey(db, key, newObj, tableAccessor, onError, callback)
         }
       }
-    }, 1, request.token)
+    }, 1, token)
   }
 
-  protected def insertWithKey(db:MrySpkDatabase, request: InMessage, key: String, newObj: Map[String, Any],
-                              tableAccessor: (OperationApi) => Variable, callback: (Value) => Unit) {
+  protected def insertWithKey(db:MrySpkDatabase, key: String, newObj: Map[String, Any],
+                              tableAccessor: (OperationApi) => Variable,onError: (Exception) => Unit,
+                              callback: (Value) => Unit) {
       db.execute(b => {
         val table = tableAccessor(b)
         table.set(key, newObj)
         b.returns(table.get(key))
       }, (values, optException) => {
         optException.headOption match {
-          case e: Exception => request.replyWithError(e)
+          case e: Exception => onError(e)
           case _ => {
             callback(values.headOption.getOrElse(""))
           }
@@ -186,6 +189,7 @@ trait DatabaseHelper {
     )
   }
 }
+
 trait JsonHelper {
 
   protected def getJsonBody(request: InMessage) = {

@@ -53,21 +53,23 @@ class MemberSubscriptionMryResource(db: MrySpkDatabase, scn: ScnClient) extends 
   override def create(request: InMessage) {
     println("Received CREATE request on member_subscription resource..." + request.toString)
 
-    //TODO: check in reverse lookup table "name" to see if user aleady exists
+    //TODO: validate if user aleady exists (check in reverse lookup table "name" ?)
     val subscription = convertJsonValue(getJsonBody(request), model)
 
     request.parameters.get("username") match {
       case (Some(MString(username))) => {
-        insertWithScnSequence(db, scn,  request, model.id, model.id,
-          (subscription ++ Map(model.username -> username)),
+        insertWithScnSequence(
+          db = db,
+          scn = scn,
+          token = request.token,
+          onError = (e: Exception) => {request.replyWithError(e)},
+          sequenceName = model.id,
+          keyName = model.id,
+          newRecord = (subscription ++ Map(model.username -> username)),
           tableAccessor = (b: OperationApi) => {
             b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkDatabaseModel.SUBSCRIPTION_TABLE)
           },
-          callback = (value) => {
-
-            this.respond(request, JsonConverter.toJsonObject(value, model))
-            //TODO: percolate here (timeline)
-          }
+          callback = (value) => { this.respond(request, JsonConverter.toJsonObject(value, model)) }
         )
       }
       case _ => {

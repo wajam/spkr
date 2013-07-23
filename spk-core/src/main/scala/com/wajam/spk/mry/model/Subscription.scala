@@ -2,6 +2,8 @@ package com.wajam.spk.mry.model
 
 /**
  * Subscription model definition
+ * Represents a unidirectional link between two members. Subscriptions are only used to populate other member's
+ * subscribers through percolation.
  */
 
 object Subscription extends Model {

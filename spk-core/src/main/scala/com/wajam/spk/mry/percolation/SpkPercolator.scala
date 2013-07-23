@@ -12,25 +12,27 @@ import com.wajam.mry.execution.MapValue
 import scala.collection.mutable
 import com.wajam.scn.client.ScnClient
 import com.wajam.spnl.feeder.Feeder
+import com.wajam.nrv.Logging
 
 /**
- * This class uses spnl to schedule tasks that will manipulate data in the database based events, using the logic defined here.
- * This is refered to as "percolation". There are 2 types of percoaltion tasks :
- *  - Continuous tasks which constantly iterated through the entire local store in a loop and execute their logic on all data.
- *  - Timeline tasks which get triggered every time new data is inserted (similar to a database trigger)
- * Those tasks are used to achive things like:
- *  - Update data based on a set of criterias.
- *  - Insert new data that is already partly inserted, but has other dependecies that need to be sharded elsewhere (like a reverse lookup table).
- *  - Delete records using some particular logic.
+ * This class uses spnl to schedule tasks that will manipulate data in the database based on events, using the logic
+ * defined here. This data manipulation is referred to as "percolation". There are 2 types of percolation tasks :
+ *  - Continuous tasks, which constantly iterated through the entire local store in a loop and execute their logic on
+ *    all data.
+ *  - Timeline tasks, which get triggered every time new data is inserted (similar to a database trigger)
+ * Those tasks are used to achieve things like:
+ *  - Update or delete data using custom logic.
+ *  - Insert data that already exists, but has other dependencies that need to be sharded elsewhere
+ *    (like a reverse lookup table, since we can usually only get data using a single ID).
  */
-class Percolator(db: MrySpkDatabase, scn: ScnClient, spnlPersistence: TaskPersistenceFactory) {
-  // The percolation logic is denfined in each one of those classes.
+class SpkPercolator(db: MrySpkDatabase, scn: ScnClient, spnlPersistence: TaskPersistenceFactory) extends Logging {
+  // The percolation logic is defined in each one of those classes.
   val subscriberPercolation = new SubscriberPercolationResource(db,scn) // Builds the list of subscribers for each member as subscriptions are made
-  val feedPercolation = new FeedPercolationResource(db,scn) // Builds the feed for each memeber based on posted messages and subscribed members
+  val feedPercolation = new FeedPercolationResource(db,scn) // Builds the feed for each member based on posted messages and subscribed members
 
   private val spnl = new Spnl
 
-  // Observe MemberStatus change on the store service, so we can adjuste percolation accordingly (cannot percolate on member when status = Down)
+  // Observe MemberStatus change on the store service, so we can adjust percolation accordingly (cannot percolate on member when status = Down)
   db.addObserver(event => {
     event match { case event: StatusTransitionEvent =>
         event.to match {
@@ -59,7 +61,7 @@ class Percolator(db: MrySpkDatabase, scn: ScnClient, spnlPersistence: TaskPersis
     )
   }
 
-  // Used to store all tasks that are currentely running in spnl. This will be used to prevent registering the same task twice.
+  // Used to store all tasks that are currently running in spnl. This will be used to prevent registering the same task twice.
   private val tasks: mutable.Map[ServiceMember, Seq[Task]] = mutable.Map()
 
   def AcceptAll: Feeder.FeederPredicate = (data: Map[String,Any]) => true
@@ -68,14 +70,14 @@ class Percolator(db: MrySpkDatabase, scn: ScnClient, spnlPersistence: TaskPersis
     tasks.synchronized {
       if (!tasks.contains(member)) {
         val tokenRanges = db.getMemberTokenRanges(member)
-        println("Creating percolation tasks for member %s (%s).".format(member, tokenRanges))
+        info("Creating percolation tasks for member %s (%s).".format(member, tokenRanges))
         val memberTasks = Seq(
           createTask(db.model.tableSubscription, registerPercolation("subscriber aggregation",subscriberPercolation), AcceptAll, member, continuous = false),
           createTask(db.model.tablePostMessage, registerPercolation("feed aggregation",feedPercolation),AcceptAll, member, continuous = false)
         )
         tasks += (member -> memberTasks)
 
-        println("Starting percolation tasks for member %s.".format(member))
+        info("Starting percolation tasks for member %s.".format(member))
         memberTasks.foreach(spnl.run(_))
       }
     }
@@ -84,7 +86,7 @@ class Percolator(db: MrySpkDatabase, scn: ScnClient, spnlPersistence: TaskPersis
   private def removeMemberTasks(member: ServiceMember) {
     tasks.synchronized {
       if (tasks.contains(member)) {
-        println("Stopping percolation tasks for member %s.".format(member))
+        info("Stopping percolation tasks for member %s.".format(member))
         val memberTasks = tasks(member)
         memberTasks.foreach(spnl.stop(_))
         tasks -= member
@@ -95,7 +97,7 @@ class Percolator(db: MrySpkDatabase, scn: ScnClient, spnlPersistence: TaskPersis
   //Creates and registers a TaskAction using the specified logic
   private def registerPercolation(name: String, percolationResource: PercolationResource): TaskAction = {
     val action = new TaskAction(name, (request: SpnlRequest) => {
-      println("Percolating on %s with this message: %s".format(name,request.message))
+      info("Percolating on %s with this message: %s".format(name,request.message))
 
       // Extracts the data (keys, values, token, timestamp)
       val data = request.message.getData[Map[String, Any]]
@@ -123,7 +125,7 @@ class Percolator(db: MrySpkDatabase, scn: ScnClient, spnlPersistence: TaskPersis
       try {
         (keys, newRecord, token) match {
           case (keySeq: Seq[String], valueMap: MapValue, t: Long) => percolationResource.PercolateTaskLogic(keySeq, valueMap, t)
-          case _ => println("Invalid percolation values format: keys=%s (expected %s), values=%s (expected %s)".
+          case _ => info("Invalid percolation values format: keys=%s (expected %s), values=%s (expected %s)".
             format(keys + "(class=%s)".format(keys.getClass), "Seq[String]",newRecord + "(class=%s)".format(newRecord.getClass), "Map[String, Any]" ))
         }
         request.ok()

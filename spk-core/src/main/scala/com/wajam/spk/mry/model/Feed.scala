@@ -1,8 +1,8 @@
 package com.wajam.spk.mry.model
 
 /**
- * Feed model definition
- * The feed contains all the message entries that a user should see based on his subscription.
+ * Feed model definition.
+ * The feed contains all the message that a member should be able to read.
  */
 
 object Feed extends Model {
@@ -14,7 +14,7 @@ object Feed extends Model {
   val subscriptionUsername = "subscription_username"
   // The name that should be displayed next to the message
   val subscriptionDisplayName = "subscription_display_name"
-  // Message content is duplicated on the local shard (same shard thanx to the username key).
+  // Message content is duplicated on the local shard (same shard thanks to the username key).
   val content = "message_content"
 
   val id = feedId

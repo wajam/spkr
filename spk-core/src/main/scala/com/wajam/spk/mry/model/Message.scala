@@ -2,6 +2,8 @@ package com.wajam.spk.mry.model
 
 /**
  * Message model definition.
+ * Represents a messages submitted by a member. Messages are only used to populate other member's feeds through
+ * percolation.
  */
 
 object Message extends Model {

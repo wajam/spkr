@@ -9,7 +9,7 @@ import com.wajam.spk.config.SpkConfig
  * A custom MySQL data store implementation using the mry framework abstractions.
  * A Database is a type of distributed Service (nrv), define in mry as a distributed store.
  * This class adds table definitions and creates the database using the configuration file.
- * When instanciating the database components, if the tables do not exist in the database, the mry super
+ * When instantiating the database components, if the tables do not exist in the database, the mry super
  * class implementation will create them.
  */
 class MrySpkDatabase(name:String, config: SpkConfig) extends Database(name) {

@@ -22,7 +22,7 @@ class MemberMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryResource(
    *  Note: this may also be used to validate the existence of a member.
    */
   override def get(request: InMessage) {
-    println("Received GET request on member resource... " + request)
+    info("Received GET request on member resource... " + request)
     db.execute(b => {
       b.returns(b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE)
         .get(getValidatedKey(request, model.username)))
@@ -46,7 +46,7 @@ class MemberMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryResource(
    *
    */
   override def create(request: InMessage) {
-    println("Received CREATE request on member resource..." + request.toString)
+    info("Received CREATE request on member resource..." + request.toString)
 
     val member = convertJsonValue(getJsonBody(request), model)
     member.get(model.username) match {
@@ -59,7 +59,7 @@ class MemberMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryResource(
           callback = (value) => {
             this.respond(request, JsonConverter.toJsonObject(value, model))
             // Note: It would be possible to manually trigger the appropriate percolation here.
-            // This would reduce the delay until the data is percolated. The main percolation scheduled in spnl would
+            // This would reduce the delay until the data is percolated. The primary percolation scheduled in spnl would
             // act as a "fallback" if the percolation were to fail here. In any case, it is not necessary.
           }
         )

@@ -1,24 +1,22 @@
 package com.wajam.spk.mry
 
 import com.wajam.nrv.service._
-import com.wajam.nrv.protocol.{Protocol}
+import com.wajam.nrv.protocol.Protocol
 import com.wajam.nrv.data.InMessage
-import scala.Some
 import com.wajam.spk.resources._
 import com.wajam.scn.client.ScnClient
 import com.wajam.nrv.utils.{SynchronizedIdGenerator, TimestampIdGenerator}
 import com.wajam.nrv.utils.timestamp.Timestamp
 import scala.Some
-import com.wajam.spk.mry.percolation.Percolator
-import com.wajam.spnl.TaskPersistenceFactory
+import com.wajam.nrv.Logging
 
 /**
- * Concrete service implementation for the spk_http service. This service handles http requests through a REST API by
+ * Concrete service implementation for the http_api service. This service handles http requests through a REST API by
  * calling the mry database service and converting the result to JSon. The result is sent back to the original caller.
  */
 class SpkService(name: String, database: MrySpkDatabase, protocol: Protocol, scn: ScnClient)
   extends Service(name, new ActionSupportOptions(protocol = Some(protocol),
-    resolver = Some(new Resolver(tokenExtractor = Resolver.TOKEN_RANDOM())))) {
+    resolver = Some(new Resolver(tokenExtractor = Resolver.TOKEN_RANDOM())))) with Logging {
 
   // Timestamp generator, required by the mry database
   val generator = new TimestampIdGenerator with SynchronizedIdGenerator[Long]
@@ -30,13 +28,13 @@ class SpkService(name: String, database: MrySpkDatabase, protocol: Protocol, scn
   val feedMessageResource = new MemberFeedMryResource(database,scn)
 
   // Each possible http path is mapped with a unique Action, which calls the appropriate resource behavior.
-  registerAction(new Action(SpkService.memberWithId, handleException(msg => { memberResource.get(msg)}), ActionMethod.GET))
-  registerAction(new Action(SpkService.member, handleException(msg => { memberResource.create(msg)}), ActionMethod.POST))
-  registerAction(new Action(SpkService.member, handleException(msg => { memberResource.get(msg)}), ActionMethod.GET))
-  registerAction(new Action(SpkService.memberSubscription, handleException(msg => { subscriptionResource.create(msg)}), ActionMethod.POST))
-  registerAction(new Action(SpkService.memberSubscription, handleException(msg => { subscriptionResource.get(msg)}), ActionMethod.GET))
-  registerAction(new Action(SpkService.memberPostMessage, handleException(msg => { postMessageResource.create(msg)}), ActionMethod.POST))
-  registerAction(new Action(SpkService.memberFeedMessage, handleException(msg => { feedMessageResource.get(msg)}), ActionMethod.GET))
+  registerAction(new Action(SpkService.memberWithId, handleException(memberResource.get), ActionMethod.GET))
+  registerAction(new Action(SpkService.member, handleException(memberResource.create), ActionMethod.POST))
+  registerAction(new Action(SpkService.member, handleException(memberResource.get), ActionMethod.GET))
+  registerAction(new Action(SpkService.memberSubscription, handleException(subscriptionResource.create), ActionMethod.POST))
+  registerAction(new Action(SpkService.memberSubscription, handleException(subscriptionResource.get), ActionMethod.GET))
+  registerAction(new Action(SpkService.memberPostMessage, handleException(postMessageResource.create), ActionMethod.POST))
+  registerAction(new Action(SpkService.memberFeedMessage, handleException(feedMessageResource.get), ActionMethod.GET))
 
   // A method used to wrap the resource behavior with error handling.
   private def handleException(handler: InMessage => Unit):(InMessage=>Unit) = {
@@ -46,14 +44,14 @@ class SpkService(name: String, database: MrySpkDatabase, protocol: Protocol, scn
       } catch  {
         case e:Exception =>
           msg.replyWithError(e, Map(), ResponseHeader.RESPONSE_HEADERS, Map("error" -> "Other error: %s".format(e.toString)))
-          println("Error! unable to handle API call. " + e.toString)
+          error("Error! unable to handle API call. " + e.toString)
       }
     }
   }
 
   // A simple action to test the service. It does not depend on mry, and can be called using a url like localhost:port/status
   registerAction(new Action(SpkService.test, message => {
-    println("Received GET request on status...")
+    info("Received GET request on status...")
     message.reply(Map(), ResponseHeader.RESPONSE_HEADERS, Map("status" -> "OK"), 200)
   },ActionMethod.GET))
 

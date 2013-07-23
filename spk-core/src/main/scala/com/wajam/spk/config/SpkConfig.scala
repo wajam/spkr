@@ -25,10 +25,16 @@ class SpkConfig(config: Configuration) {
 object SpkConfig {
   private val defaultConfigurationPath = "etc/spk.properties"
 
+  /**
+   * A fabric method instantiating a configuration using the default config file.
+   */
   def fromDefaultConfigurationPath: SpkConfig = {
     fromConfigurationPath(defaultConfigurationPath)
   }
 
+  /**
+   * A fabric method used to create a configuration from a custom config file.
+   */
   def fromConfigurationPath(path: String): SpkConfig = {
     val config = new PropertiesConfiguration(path)
 

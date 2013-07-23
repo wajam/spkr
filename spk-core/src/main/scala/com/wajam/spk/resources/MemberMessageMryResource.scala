@@ -21,7 +21,7 @@ class MemberMessageMryResource(db: MrySpkDatabase, scn: ScnClient) extends MryRe
    * Messages may be exposed XSS issues when sent back to the client.
    */
   override def create(request: InMessage) {
-    println("Received CREATE request on member_messages resource..." + request.toString)
+    info("Received CREATE request on member_messages resource..." + request.toString)
     val subscription = convertJsonValue(getJsonBody(request), model)
     request.parameters.get("username") match {
       case (Some(MString(username))) => {

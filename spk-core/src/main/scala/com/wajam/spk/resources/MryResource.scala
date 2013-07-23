@@ -1,10 +1,9 @@
 package com.wajam.spk.resources
 
-import com.wajam.nrv.data.{MString, MList, InMessage}
-import com.wajam.mry.execution.{Value, Variable, OperationApi, MapValue}
+import com.wajam.nrv.data.InMessage
+import com.wajam.mry.execution.{Value, Variable, OperationApi}
 import com.wajam.mry.execution.Implicits._
 import com.wajam.spk.mry.MrySpkDatabase
-import com.wajam.mry.Database
 import com.wajam.scn.client.ScnClient
 import com.wajam.spk.mry.model.{PropertyType, Model}
 import net.liftweb.json._
@@ -12,14 +11,17 @@ import com.wajam.mry.execution.MapValue
 import scala.Some
 import com.wajam.nrv.data.MList
 import com.wajam.nrv.data.MString
+import com.wajam.nrv.Logging
 
 /**
- * This trait offers a template for the creation of additionnal resources. It offers an interface to
+ * This trait offers a template for the creation of additional resources. It offers an interface to
  * handle all 5 possible query types from an HTTP REST call. The exact implementation to handle each
  * call must be defined in every concrete Resource.
+ * Note: Some browsers will use OPTIONS as a query time (see CORS). In the case of Spk, OPTIONS are handled in the
+ * SpkService.
  *
  */
-abstract class MryResource(protected val db: MrySpkDatabase, scn: ScnClient) extends MessageHelper with ParamExtractor with DatabaseHelper with JsonHelper {
+abstract class MryResource(protected val db: MrySpkDatabase, scn: ScnClient) extends MessageHelper with ParamExtractor with DatabaseHelper with JsonHelper with Logging {
 
   /**
    * Respond to GET resource/
@@ -98,7 +100,9 @@ trait MessageHelper {
 }
 
 /**
- * This trait will extract parameters from an spk_http query defined by the user.
+ * Methods that can extract parameters from an http_api query defined by the user.
+ * e.g.: In the spk query: http://spkServer:9999/messages/23
+ *       we could extract the messageId parameter worth 23.
  */
 trait ParamExtractor {
   def getParamValues(request: InMessage, name: String): Option[Seq[String]] = {
@@ -131,15 +135,9 @@ trait ParamExtractor {
       case None => throw new Exception(name + " not found")
     }
   }
-
-  def getValidatedNumericKey(request: InMessage, name: String): String = {
-    val value = getValidatedKey(request, name)
-    if (!value.forall(_.isDigit)) throw new NumberFormatException(value)
-    value
-  }
 }
 /**
- * An object containing the http header for every spk_http message.
+ * An object containing the http header for every http_api message.
  */
 object ResponseHeader {
   val RESPONSE_HEADERS = Map (
@@ -150,6 +148,9 @@ object ResponseHeader {
   )
 }
 
+/**
+ * Contains methods to insert new data in mry using the specified key or an automatically generated key from scn.
+ */
 trait DatabaseHelper {
   protected def insertWithScnSequence(db:MrySpkDatabase, scn: ScnClient, token: Long,
                                       onError: (Exception) => Unit,
@@ -190,6 +191,9 @@ trait DatabaseHelper {
   }
 }
 
+/**
+ *  Methods used to parse an mry query result to clean JSON usable by the javascript client.
+ */
 trait JsonHelper {
 
   protected def getJsonBody(request: InMessage) = {
@@ -204,7 +208,7 @@ trait JsonHelper {
   }
 
   /**
-   * Convert field value to useable type
+   * Convert field value to usable type
    */
   protected def convertFieldValue(key: String, value: Any, model: Model) = {
     model.definition(key) match {

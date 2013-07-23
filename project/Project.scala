@@ -19,6 +19,7 @@ object SpkBuild extends Build {
     "Oracle Maven2 Repo" at "http://download.oracle.com/maven",
     "Sonatype" at "http://oss.sonatype.org/content/repositories/release",
     "spy" at "http://files.couchbase.com/maven2/",
+    "Cloudera" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
     "Twitter" at "http://maven.twttr.com/"
   )
 
@@ -32,7 +33,13 @@ object SpkBuild extends Build {
     "com.wajam" %% "scn-core" % "0.1-SNAPSHOT",
     "com.wajam" %% "spnl-core" % "0.1-SNAPSHOT",
     "com.wajam" %% "mry-core" % "0.1-SNAPSHOT",
-    "org.scalatest" %% "scalatest" % "1.7.1" % "test,it",
+    "com.google.guava" % "guava" % "12.0",
+    "c3p0" % "c3p0" % "0.9.1.2",
+    "mysql" % "mysql-connector-java" % "5.1.6",
+    "spy" % "spymemcached" % "2.6",
+    "nl.grons" %% "metrics-scala" % "2.2.0" exclude("org.slf4j", "slf4j-api"),
+    "net.liftweb" %% "lift-json" % "2.5-RC4",
+    "org.scalatest" %% "scalatest" % "1.9.1" % "test,it",
     "junit" % "junit" % "4.10" % "test,it",
     "org.mockito" % "mockito-core" % "1.9.0" % "test,it"
   )
@@ -44,7 +51,7 @@ object SpkBuild extends Build {
     publishMavenStyle := true,
     organization := "com.wajam",
     version := "0.1-SNAPSHOT",
-    scalaVersion := "2.9.1"
+    scalaVersion := "2.10.2"
   )
 
   lazy val root = Project(PROJECT_NAME, file("."))

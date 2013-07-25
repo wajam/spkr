@@ -3,8 +3,8 @@ import Keys._
 import com.typesafe.sbt.SbtStartScript
 
 //TODO change the name of the object to reflect your project name.
-object SpkBuild extends Build {
-  val PROJECT_NAME = "spk"
+object SpkrBuild extends Build {
+  val PROJECT_NAME = "spkr"
 
   var commonResolvers = Seq(
     // local snapshot support

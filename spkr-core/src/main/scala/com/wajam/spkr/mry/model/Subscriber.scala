@@ -13,7 +13,7 @@ object Subscriber extends Model {
   val subscriberUsername = "subscriber_username"
   val subscriberDisplayName = "subscriber_display_name"
 
-  val id = subscriberUsername
+  override def id = subscriberUsername
   val definition = Map(
     username -> PropertyType.String,
     subscriberUsername -> PropertyType.String,

@@ -17,7 +17,7 @@ object Feed extends Model {
   // Message content is duplicated on the local shard (same shard thanks to the username key).
   val content = "message_content"
 
-  val id = feedId
+  override def id = feedId
   val definition = Map(
     username -> PropertyType.String,
     feedId -> PropertyType.Number,

@@ -54,7 +54,7 @@ class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends
   override def create(request: InMessage) {
     info("Received CREATE request on member_subscription resource..." + request.toString)
 
-    //TODO: validate if user already exists (check in reverse lookup table "name" ?)
+    //TODO: validate if user already exists (maybe check in reverse lookup table "name"?)
     val subscription = convertJsonValue(getJsonBody(request), model)
 
     request.parameters.get("username") match {

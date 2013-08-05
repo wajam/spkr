@@ -3,6 +3,9 @@ package com.wajam.spkr.mry
 import com.wajam.mry.{Database, ConsistentDatabase}
 import com.wajam.mry.storage.mysql.{Table, Model, MysqlStorageConfiguration, MysqlStorage}
 import com.wajam.spkr.config.SpkrConfig
+import com.wajam.nrv.service.TokenRange
+import com.wajam.nrv.utils.Event
+import com.wajam.nrv.consistency.{MemberConsistencyState, ConsistencyStateTransitionEvent}
 
 
 /**
@@ -14,11 +17,17 @@ import com.wajam.spkr.config.SpkrConfig
  */
 class MrySpkrDatabase(name:String, config: SpkrConfig) extends Database(name) {
 
-  val mysqlStorage = new MysqlStorage(MysqlStorageConfiguration(MrySpkDatabaseModel.STORE_TYPE,
-    config.getMryMysqlServer,
-    config.getMryMysqlDb,
-    config.getMryMysqlUsername,
-    config.getMryMysqlPassword))
+  val mysqlStorage = new MysqlStorage(
+    MysqlStorageConfiguration(
+      MrySpkDatabaseModel.STORE_TYPE,
+      config.getMryMysqlServer,
+      config.getMryMysqlDb,
+      config.getMryMysqlUsername,
+      config.getMryMysqlPassword,
+      gcTokenStep = 1000000000L, // This will accelerate the garbage collection.
+
+    )
+  )
 
   // create and sync model
   val model = MrySpkDatabaseModel
@@ -27,8 +36,11 @@ class MrySpkrDatabase(name:String, config: SpkrConfig) extends Database(name) {
   // register the storage engine
   registerStorage(mysqlStorage)
 
-  //TODO: update garbage collection range onRangeConsistencyAvailabilityChange
-  //addObserver(GCUpdater)
+  // To prevent db locks, MRY never updates a record. Instead, in inserts a new one with an identical key and token.
+  // This creates redundant records that need to be garbage collected.
+  mysqlStorage.GarbageCollector.setCollectedRanges(List(TokenRange(0,TokenRange.MaxToken))) // If the db contained other shards, the proper range should be set here.
+  mysqlStorage.GarbageCollector.start()
+  // TODO: with a dynamic cluster using replication, the shard ranges may change at runtime and should be updated through an observer.
 
   def stopStorage() {
     mysqlStorage.stop()

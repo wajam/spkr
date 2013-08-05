@@ -12,7 +12,7 @@ import com.wajam.spkr.mry.percolation.SpkrPercolator
 import com.wajam.spnl.NoTaskPersistenceFactory
 
 /**
- * A static cluster doesn't use Zookeeper for cluster wide coordination, or persistence between restarts.
+ * A static cluster doesn't use Zookeeper for cluster wide coordination, and does not save it state between restarts.
  * It assumes all nodes are always up and running.
  * However, since it doesn't depend on zookeeper, it's an excellent option for testing services on a simple cluster.
  */
@@ -25,7 +25,7 @@ object StaticSpkrClusterCreator extends Logging  {
     services.localNode = new LocalNode(config.getSpkListenAddress, Map("nrv" -> config.getNrvListenPort, "http_api" -> config.getSpkListenPort))
     info("Local node is %s".format(services.localNode))
 
-    // The cluster manager manages nodes' memberships to services.
+    // The "cluster manager" manages each node's memberships to multiple services.
     info("Creating static cluster manager...")
     val clusterManager = new StaticClusterManager
 

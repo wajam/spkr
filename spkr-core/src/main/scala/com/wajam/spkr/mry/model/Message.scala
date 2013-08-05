@@ -15,7 +15,7 @@ object Message extends Model {
   val displayName = "message_display_name"
   val content = "message_content"
 
-  val id = messageId
+  override def id = messageId
   val definition = Map(
     messageId -> PropertyType.Number,
     username -> PropertyType.String,

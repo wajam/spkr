@@ -6,6 +6,7 @@ import com.wajam.mry.execution.Implicits._
 import com.wajam.spkr.mry.MrySpkrDatabase
 import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model.{PropertyType, Model}
+import com.wajam.spkr
 import net.liftweb.json._
 import com.wajam.mry.execution.MapValue
 import scala.Some
@@ -87,7 +88,7 @@ trait MessageHelper {
   }
 
   /**
-   * This will handle the Futur (asynchronous call) to mry in a failure case
+   * This will handle the Future (asynchronous call) to mry in a failure case
    */
   def handleFailures(request: InMessage): PartialFunction[Throwable, Unit] = {
 
@@ -229,14 +230,6 @@ trait JsonHelper {
         case b: Boolean => b
         case bi: BigInt => (bi.intValue() == 1)
         case _ => value.toString.toBoolean
-      }
-      case PropertyType.Date => value match {
-        case s: String => if (s.isEmpty) {
-          Model.DEFAULT_DATE
-        } else {
-          s
-        }
-        case _ => value.toString
       }
       case PropertyType.MapList => value match {
         case seq: Seq[Map[String, String]] => seq

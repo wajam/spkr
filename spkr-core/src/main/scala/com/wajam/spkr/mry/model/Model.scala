@@ -57,15 +57,8 @@ abstract class Model {
 
 }
 
-object Model {
-  val DEFAULT_DATE = "0000-00-00 00:00:00"
-  val DATE_FORMAT = "yyyy-MM-dd HH:mm:ss"
-
-  def currentDate() = new SimpleDateFormat(DATE_FORMAT).format(Calendar.getInstance().getTime)
-}
-
 object PropertyType extends Enumeration {
   type PropertyType = Value
-  val Number, Float, Bool, String, Date, MapList, StringList = Value
+  val Number, Float, Bool, String, MapList, StringList = Value
 }
 

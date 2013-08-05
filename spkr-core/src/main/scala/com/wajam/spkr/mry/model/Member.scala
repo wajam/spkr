@@ -11,7 +11,7 @@ object Member extends Model {
   // TODO: support display name update
   val displayName = "display_name"
 
-  val id = username
+  override def id = username
   val definition = Map(
     username -> PropertyType.String,
     displayName -> PropertyType.String

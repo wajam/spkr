@@ -8,6 +8,11 @@
 *.class
 *.log
 
+#SPKR Application #
+#################
+logs
+etc/local*
+
 # Scala-IDE specific
 .scala_dependencies
 

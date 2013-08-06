@@ -1,14 +1,12 @@
 package com.wajam.spkr.mry.percolation
 
-import com.wajam.spkr.resources.{MemberFeedMryResource, MemberMessageMryResource, MemberSubscriptionMryResource, MemberMryResource}
 import com.wajam.spnl._
-import com.wajam.mry.storage.mysql.{TableAllLatestFeeder, TableTimelineFeeder, Table, TableContinuousFeeder}
+import com.wajam.mry.storage.mysql.{TableAllLatestFeeder, TableTimelineFeeder, Table}
 import com.wajam.nrv.protocol.codec.GenericJavaSerializeCodec
 import com.wajam.spkr.mry.MrySpkrDatabase
 import com.wajam.spnl.feeder.Feeder._
 import com.wajam.nrv.service.{MemberStatus, StatusTransitionEvent, ServiceMember}
 import com.wajam.mry.execution.MapValue
-
 import scala.collection.mutable
 import com.wajam.scn.client.ScnClient
 import com.wajam.spnl.feeder.Feeder

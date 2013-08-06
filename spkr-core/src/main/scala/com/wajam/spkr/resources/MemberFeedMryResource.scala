@@ -7,11 +7,7 @@ import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model.Feed
 import com.wajam.nrv.data.MString
 import com.wajam.mry.execution.ListValue
-import scala.Some
 import com.wajam.spkr.json.MryJsonConverter
-
-//import com.wajam.spkr.json.JsonConverter
-import net.liftweb.json.Serialization._
 
 /**
  *  Resource for feeds. A feed is the set of messages a given user wants to read based on his subscription.
@@ -34,7 +30,6 @@ class MemberFeedMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryReso
         }).
           onFailure (handleFailures(request)).
           onSuccess { case Seq(ListValue(feedMessages)) => {
-            //this.respond(request, JsonConverter.toJsonList(feedMessages, model))
             this.respond(request, MryJsonConverter.toJson(feedMessages))
           }
           case a => {

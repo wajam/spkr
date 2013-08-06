@@ -1,17 +1,12 @@
 package com.wajam.spkr.resources
 
-import com.wajam.nrv.data.InMessage
-import com.wajam.mry.execution.{Value, Variable, OperationApi}
+import com.wajam.mry.execution.{Value, Variable, OperationApi, MapValue}
 import com.wajam.mry.execution.Implicits._
 import com.wajam.spkr.mry.MrySpkrDatabase
 import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model.{PropertyType, Model}
-import com.wajam.spkr
 import net.liftweb.json._
-import com.wajam.mry.execution.MapValue
-import scala.Some
-import com.wajam.nrv.data.MList
-import com.wajam.nrv.data.MString
+import com.wajam.nrv.data.{InMessage, MList, MString}
 import com.wajam.nrv.Logging
 
 /**
@@ -201,11 +196,9 @@ trait JsonHelper {
     request.getData[JObject]
   }
   protected def convertJsonValue(json: JObject, model: Model): Map[String, Any] = {
-    json.values.filter(e => {
-      model.definition.contains(e._1)
-    }) map (e => {
-      (e._1 -> convertFieldValue(e._1, e._2, model))
-    })
+    json.values collect {
+      case (k, v) if model.definition.contains(k) => (k -> convertFieldValue(k, v, model))
+    }
   }
 
   /**

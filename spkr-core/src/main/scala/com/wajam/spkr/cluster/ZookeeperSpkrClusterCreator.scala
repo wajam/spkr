@@ -22,7 +22,7 @@ import com.wajam.nrv.zookeeper.cluster.ZookeeperClusterManager
  */
 object ZookeeperSpkrClusterCreator extends Logging  {
 
-  def BuildDynamicCluster(config: SpkrConfig): Services = {
+  def buildDynamicCluster(config: SpkrConfig): Services = {
     // 'Services' contains everything we need to run our Spkr server
     val services: Services = new Services
     services.config = config

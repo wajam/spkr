@@ -30,7 +30,6 @@ class MemberMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource
       onFailure (handleFailures(request)).
       onSuccess {
       case Seq(MapValue(member), _*) => {
-        //this.respond(request, JsonConverter.toJsonObject(member, model))
         this.respond(request, MryJsonConverter.toJson(member))
       }
       case _ => {
@@ -58,7 +57,6 @@ class MemberMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource
           },
           onError = (e: Exception) => {request.replyWithError(e)},
           callback = (value) => {
-            //this.respond(request, JsonConverter.toJsonObject(value, model))
             this.respond(request, MryJsonConverter.toJson(value))
             // Note: It would be possible to manually trigger the appropriate percolation here.
             // This would reduce the delay until the data is percolated. The primary percolation scheduled in spnl would

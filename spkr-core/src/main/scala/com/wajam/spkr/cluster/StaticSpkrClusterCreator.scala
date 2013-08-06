@@ -12,13 +12,14 @@ import com.wajam.spkr.mry.percolation.SpkrPercolator
 import com.wajam.spnl.NoTaskPersistenceFactory
 
 /**
- * A static cluster doesn't use Zookeeper for cluster wide coordination, and does not save it state between restarts.
- * It assumes all nodes are always up and running.
- * However, since it doesn't depend on zookeeper, it's an excellent option for testing services on a simple cluster.
+ * A static cluster doesn't use Zookeeper for cluster wide coordination. It does not save any contextual state info, like
+ * percolation position and SCN sequence which will be reinitialized after a server restart. It assumes all nodes are
+ * always up and running. However, since it doesn't depend on zookeeper, it's an excellent option for testing services
+ * on a simple cluster.
  */
 object StaticSpkrClusterCreator extends Logging  {
 
-  def BuildStaticCluster(config: SpkrConfig): Services = {
+  def buildStaticCluster(config: SpkrConfig): Services = {
     // 'Services' contains everything we need to run our Spkr server
     val services: Services = new Services
     services.config = config

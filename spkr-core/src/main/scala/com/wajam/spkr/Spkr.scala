@@ -24,20 +24,20 @@ object Spkr extends App with Logging {
     server.startAndBlock()
   } catch {
     case e: Exception => {
-      error("Fatal error starting spkr. Exiting spkr server.", e)
+      error("Fatal error starting SPKR. Exiting SPKR server.", e)
       System.exit(1)
     }
   }
 
   /**
-   * This class will initialize the spkr server properly.
+   * This class will initialize the SPKR server properly.
    * It uses the config file to build the right type of cluster (see config.isStaticCluster).
    * The static cluster is easier to setup, but the dynamic zookeeper cluster is required for cluster-aware nodes.
    */
   private class SpkServer(config: SpkrConfig) extends Logging  {
     val spkrServices: Services = config.isStaticCluster match {
-      case true => StaticSpkrClusterCreator.BuildStaticCluster(config)
-      case false => ZookeeperSpkrClusterCreator.BuildDynamicCluster(config)
+      case true => StaticSpkrClusterCreator.buildStaticCluster(config)
+      case false => ZookeeperSpkrClusterCreator.buildDynamicCluster(config)
     }
 
     /**
@@ -47,9 +47,8 @@ object Spkr extends App with Logging {
      * to terminate properly.
      */
     def stop() {
-      info("Stopping spkr server...")
+      info("Stopping SPKR server...")
       spkrServices.cluster.stop(timeOutInMs = 5000)
-      spkrServices.mry.stop()
     }
 
     /**
@@ -66,7 +65,7 @@ object Spkr extends App with Logging {
      *  all the elements it aggregates.
      */
     private def start() {
-      info("Starting spkr server...")
+      info("Starting SPKR server...")
       spkrServices.cluster.start()
       spkrServices.scnClient.start()
       info("Now speaking.")

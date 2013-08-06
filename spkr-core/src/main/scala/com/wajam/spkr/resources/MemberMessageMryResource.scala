@@ -37,7 +37,6 @@ class MemberMessageMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryR
             b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkDatabaseModel.POST_MESSAGE_TABLE)
           },
           callback = (value) => {
-            //this.respond(request, JsonConverter.toJsonObject(value, model))
             this.respond(request, MryJsonConverter.toJson(value))
           }
         )

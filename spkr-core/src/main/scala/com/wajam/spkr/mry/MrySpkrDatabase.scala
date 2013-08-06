@@ -24,7 +24,7 @@ class MrySpkrDatabase(name:String, config: SpkrConfig) extends Database(name) {
       config.getMryMysqlDb,
       config.getMryMysqlUsername,
       config.getMryMysqlPassword,
-      gcTokenStep = 1000000000L  // This will accelerate the garbage collection.
+      gcTokenStep = 1000000000L  // This will accelerate the garbage collection but does not scale with a lots of data.
     )
   )
 

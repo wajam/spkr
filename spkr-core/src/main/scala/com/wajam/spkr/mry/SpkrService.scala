@@ -7,7 +7,6 @@ import com.wajam.spkr.resources._
 import com.wajam.scn.client.ScnClient
 import com.wajam.nrv.utils.{SynchronizedIdGenerator, TimestampIdGenerator}
 import com.wajam.nrv.utils.timestamp.Timestamp
-import scala.Some
 import com.wajam.nrv.Logging
 
 /**
@@ -37,7 +36,7 @@ class SpkrService(name: String, database: MrySpkrDatabase, protocol: Protocol, s
   registerAction(new Action(SpkrService.memberFeedMessage, handleException(feedMessageResource.get), ActionMethod.GET))
 
   // A method used to wrap the resource behavior with error handling.
-  private def handleException(handler: InMessage => Unit):(InMessage=>Unit) = {
+  private def handleException(handler: InMessage => Unit)(msg: InMessage): Unit = {
     msg:InMessage => {
       try {
         handler(msg)

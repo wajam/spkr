@@ -6,12 +6,8 @@ import com.wajam.mry.execution._
 import com.wajam.mry.execution.Implicits._
 import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model.Subscription
-import scala.Some
 import com.wajam.spkr.json.MryJsonConverter
 
-/**
- *
- */
 class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource(db,scn) {
 
   // All the fields associated with a subscription
@@ -30,7 +26,6 @@ class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends
         }).
           onFailure (handleFailures(request)).
           onSuccess { case Seq(ListValue(subscriptions)) => {
-            //this.respond(request, JsonConverter.toJsonList(subscriptions, model))
             this.respond(request, MryJsonConverter.toJson(subscriptions))
           }
           case _ => {
@@ -71,7 +66,6 @@ class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends
             b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkDatabaseModel.SUBSCRIPTION_TABLE)
           },
           callback = (value) => {
-            //this.respond(request, JsonConverter.toJsonObject(value, model))
             this.respond(request, MryJsonConverter.toJson(value))
           }
         )

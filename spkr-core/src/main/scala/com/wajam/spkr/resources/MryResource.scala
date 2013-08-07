@@ -8,6 +8,7 @@ import com.wajam.spkr.mry.model.{PropertyType, Model}
 import net.liftweb.json._
 import com.wajam.nrv.data.{InMessage, MList, MString}
 import com.wajam.nrv.Logging
+import com.wajam.nrv.utils.{Promise, Future}
 
 /**
  * This trait offers a template for the creation of additional resources. It offers an interface to
@@ -149,41 +150,45 @@ object ResponseHeader {
  */
 trait DatabaseHelper {
   protected def insertWithScnSequence(db:MrySpkrDatabase, scn: ScnClient, token: Long,
-                                      onError: (Exception) => Unit,
                                       sequenceName: String, keyName: String,
                                       newRecord: Map[String, Any], tableAccessor: (OperationApi) => Variable,
-                                      callback: (Value) => Unit, keyPrefix: String = "") {
+                                      keyPrefix: String = ""): Future[Value] = {
     var newObj = newRecord
+    val p = Promise[Value]
 
     // Insert with scn key
     scn.fetchSequenceIds(sequenceName, (sequence: Seq[Long], optException) => {
       optException.headOption match {
-        case e: Exception => onError(e)
+        case e: Exception => p.tryFailure(e)
         case _ => {
           val key = keyPrefix + sequence(0)
           newObj += (keyName -> key)
-          insertWithKey(db, key, newObj, tableAccessor, onError, callback)
+          val insertFuture = insertWithKey(db, key, newObj, tableAccessor)
+          insertFuture onFailure { case e: Exception =>  p.tryFailure(e) }
+          insertFuture onSuccess { case value => p.trySuccess(value) }
         }
       }
     }, 1, token)
+    p future
   }
 
+
   protected def insertWithKey(db:MrySpkrDatabase, key: String, newObj: Map[String, Any],
-                              tableAccessor: (OperationApi) => Variable,onError: (Exception) => Unit,
-                              callback: (Value) => Unit) {
+                              tableAccessor: (OperationApi) => Variable): Future[Value] = {
+    val p = Promise[Value]
+
       db.execute(b => {
         val table = tableAccessor(b)
         table.set(key, newObj)
         b.returns(table.get(key))
       }, (values, optException) => {
         optException.headOption match {
-          case e: Exception => onError(e)
-          case _ => {
-            callback(values.headOption.getOrElse(""))
-          }
+          case e: Exception => p.tryFailure(e)
+          case _ => p.trySuccess(values.headOption.getOrElse(""))
         }
       }
     )
+    p future
   }
 }
 

@@ -1,7 +1,7 @@
 package com.wajam.spkr.resources
 
 import com.wajam.nrv.data.InMessage
-import com.wajam.spkr.mry.{MrySpkDatabaseModel, MrySpkrDatabase}
+import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
 import com.wajam.mry.execution.Implicits._
 import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model.Feed
@@ -25,8 +25,8 @@ class MemberFeedMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryReso
       case (Some(MString(username))) => {
         info("Received GET request on member_feed resource... " + request)
         db.execute(b => {
-          b.returns(b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(getValidatedKey(request, model.username))
-            .from(MrySpkDatabaseModel.FEED_MESSAGE_TABLE).get())
+          b.returns(b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(getValidatedKey(request, model.username))
+            .from(MrySpkrDatabaseModel.FEED_MESSAGE_TABLE).get())
         }).
           onFailure (handleFailures(request)).
           onSuccess { case Seq(ListValue(feedMessages)) => {

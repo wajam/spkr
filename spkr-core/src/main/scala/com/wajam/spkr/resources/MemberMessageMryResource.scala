@@ -1,7 +1,7 @@
 package com.wajam.spkr.resources
 
 import com.wajam.nrv.data.{MString, InMessage}
-import com.wajam.spkr.mry.{MrySpkDatabaseModel, MrySpkrDatabase}
+import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
 import com.wajam.mry.execution._
 import com.wajam.mry.execution.Implicits._
 import com.wajam.scn.client.ScnClient
@@ -25,21 +25,23 @@ class MemberMessageMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryR
     val subscription = convertJsonValue(getJsonBody(request), model)
     request.parameters.get("username") match {
       case (Some(MString(username))) => {
-        insertWithScnSequence(
+        val InsertedMessageFuture = insertWithScnSequence(
           db = db,
           scn = scn,
           token = request.token,
-          onError = (e: Exception) => {request.replyWithError(e)},
           sequenceName = model.id,
           keyName = model.id,
           newRecord = (subscription ++ Map(model.username -> username)),
           tableAccessor = (b: OperationApi) => {
-            b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkDatabaseModel.POST_MESSAGE_TABLE)
-          },
-          callback = (value) => {
-            this.respond(request, MryJsonConverter.toJson(value))
+            b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.POST_MESSAGE_TABLE)
           }
         )
+        InsertedMessageFuture onFailure {
+          case e: Exception => request.replyWithError(e)
+        }
+        InsertedMessageFuture onSuccess {
+          case value => this.respond(request, MryJsonConverter.toJson(value))
+        }
       }
       case _ => {
         request.replyWithError(new IllegalArgumentException("A username and a subscription username must be specified."))

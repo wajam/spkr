@@ -1,6 +1,6 @@
 package com.wajam.spkr.mry.percolation
 
-import com.wajam.spkr.mry.{MrySpkDatabaseModel, MrySpkrDatabase}
+import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
 import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model._
 import com.wajam.mry.execution.{StringValue, ListValue, OperationApi, MapValue}
@@ -27,8 +27,8 @@ class FeedPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends Perco
     values.mapValue.get(sourceModel.username) match {
       case Some(StringValue(username)) => {
         db.execute(b => {
-          b.returns(b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(username)
-            .from(MrySpkDatabaseModel.SUBSCRIBER_TABLE).get())
+          b.returns(b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username)
+            .from(MrySpkrDatabaseModel.SUBSCRIBER_TABLE).get())
         }).onSuccess { case Seq(ListValue(subscribers)) => {
           subscribers.foreach({
             // Create new feed entry
@@ -42,21 +42,28 @@ class FeedPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends Perco
                 destinationModel.content -> values.mapValue.get(sourceModel.content).get
               ))
               // Insert new feed entry
-              insertWithScnSequence(
+              val insertedFeedFuture = insertWithScnSequence(
                 db = db,
                 scn = scn,
                 token = token,
-                onError = (e: Exception) => { throw e }, // If the percolation action throws an error, spnl will automaticaly scedule a retry.
                 sequenceName = destinationModel.id,
                 keyName = destinationModel.id,
                 newRecord = percolatedFeedMessage,
                 tableAccessor = (b: OperationApi) => {
-                  b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(key1).from(MrySpkDatabaseModel.FEED_MESSAGE_TABLE)
-                },
-                callback = (value) => { debug("successfully percolated this: %s".format(value)) }
+                  b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(key1).from(MrySpkrDatabaseModel.FEED_MESSAGE_TABLE)
+                }
               )
+
+              insertedFeedFuture onFailure {
+                // If the percolation action throws an error, spnl will automatically schedule a retry.
+                case e: Exception => throw e
+              }
+              insertedFeedFuture onSuccess {
+                case value => debug("successfully percolated this feed message: {}", value)
+              }
+
             }
-            case a => info("Percolation failed, expected MapValue, but got this instead: " + a)//print error msg, unknown content
+            case a => info("Percolation failed, expected MapValue, but got this instead: " + a) // print error msg, unknown content
           })
         }}
       }

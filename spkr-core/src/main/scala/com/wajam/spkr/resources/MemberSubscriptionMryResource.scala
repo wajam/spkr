@@ -1,7 +1,7 @@
 package com.wajam.spkr.resources
 
 import com.wajam.nrv.data.{MString, InMessage}
-import com.wajam.spkr.mry.{MrySpkDatabaseModel, MrySpkrDatabase}
+import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
 import com.wajam.mry.execution._
 import com.wajam.mry.execution.Implicits._
 import com.wajam.scn.client.ScnClient
@@ -21,8 +21,8 @@ class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends
       case (Some(MString(username))) => {
         info("Received GET request on member_subscription resource... " + request)
         db.execute(b => {
-          b.returns(b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(getValidatedKey(request, model.username))
-            .from(MrySpkDatabaseModel.SUBSCRIPTION_TABLE).get())
+          b.returns(b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(getValidatedKey(request, model.username))
+            .from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE).get())
         }).
           onFailure (handleFailures(request)).
           onSuccess { case Seq(ListValue(subscriptions)) => {
@@ -54,21 +54,24 @@ class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends
 
     request.parameters.get("username") match {
       case (Some(MString(username))) => {
-        insertWithScnSequence(
+        val InsertedSubscriptionFuture = insertWithScnSequence(
           db = db,
           scn = scn,
           token = request.token,
-          onError = (e: Exception) => {request.replyWithError(e)},
           sequenceName = model.id,
           keyName = model.id,
           newRecord = (subscription ++ Map(model.username -> username)),
           tableAccessor = (b: OperationApi) => {
-            b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkDatabaseModel.SUBSCRIPTION_TABLE)
-          },
-          callback = (value) => {
-            this.respond(request, MryJsonConverter.toJson(value))
+            b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE)
           }
         )
+
+        InsertedSubscriptionFuture onFailure {
+          case e: Exception => request.replyWithError(e)
+        }
+        InsertedSubscriptionFuture onSuccess {
+          case value => this.respond(request, MryJsonConverter.toJson(value))
+        }
       }
       case _ => {
         request.replyWithError(new IllegalArgumentException("A username must be specified."))

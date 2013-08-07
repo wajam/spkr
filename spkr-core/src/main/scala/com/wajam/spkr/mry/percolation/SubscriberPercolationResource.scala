@@ -1,6 +1,6 @@
 package com.wajam.spkr.mry.percolation
 
-import com.wajam.spkr.mry.{MrySpkDatabaseModel, MrySpkrDatabase}
+import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
 import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model.{Subscriber, Subscription}
 import com.wajam.mry.execution.{OperationApi, MapValue}
@@ -10,7 +10,7 @@ import com.wajam.mry.execution.Implicits._
  *  Subscriber aggregation resource via percolation: This class builds the list of subscribers that are subscribed to
  *  each member, as members insert new subscriptions.
  */
-class SubscriberPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends PercolationResource{
+class SubscriberPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends PercolationResource {
 
   private val sourceModel = Subscription
   private val destinationModel = Subscriber
@@ -31,14 +31,19 @@ class SubscriberPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends
     ))
     debug("inserting new subscriber %s from subscription %s".format(percolatedSubscriber, values))
 
-    insertWithKey(
+    val InsertedSubscriberFuture = insertWithKey(
       db = db,
       key = key2.value.toString,
       newObj = percolatedSubscriber,
       tableAccessor = (b: OperationApi) => {
-        b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE).get(key1).from(MrySpkDatabaseModel.SUBSCRIBER_TABLE)
-      },
-      onError = (e: Exception) => { throw e },
-      callback = (_) => {})
+        b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(key1).from(MrySpkrDatabaseModel.SUBSCRIBER_TABLE)
+      })
+
+    InsertedSubscriberFuture onFailure {
+      case e: Exception => throw e
     }
+    InsertedSubscriberFuture onSuccess {
+      case value => debug("successfully percolated this subscriber: {}", value)
+    }
+  }
 }

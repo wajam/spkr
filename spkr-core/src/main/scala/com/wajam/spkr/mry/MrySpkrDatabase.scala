@@ -19,7 +19,7 @@ class MrySpkrDatabase(name:String, config: SpkrConfig) extends Database(name) {
 
   val mysqlStorage = new MysqlStorage(
     MysqlStorageConfiguration(
-      MrySpkDatabaseModel.STORE_TYPE,
+      MrySpkrDatabaseModel.STORE_TYPE,
       config.getMryMysqlServer,
       config.getMryMysqlDb,
       config.getMryMysqlUsername,
@@ -29,7 +29,7 @@ class MrySpkrDatabase(name:String, config: SpkrConfig) extends Database(name) {
   )
 
   // create and sync model
-  val model = MrySpkDatabaseModel
+  val model = MrySpkrDatabaseModel
   mysqlStorage.syncModel(model)
 
   // register the storage engine
@@ -46,7 +46,7 @@ class MrySpkrDatabase(name:String, config: SpkrConfig) extends Database(name) {
   }
 }
 
-object MrySpkDatabaseModel extends Model {
+object MrySpkrDatabaseModel extends Model {
     // The store type is a name necessary to target the right storage, but multiple storage when using
     // consistencyMasterSlave for replication support is not yet implemented .
     val STORE_TYPE = "mysql"

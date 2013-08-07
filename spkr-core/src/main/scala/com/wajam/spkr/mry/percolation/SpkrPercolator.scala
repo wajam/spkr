@@ -1,7 +1,7 @@
 package com.wajam.spkr.mry.percolation
 
 import com.wajam.spnl._
-import com.wajam.mry.storage.mysql.{TableAllLatestFeeder, TableTimelineFeeder, Table}
+import com.wajam.mry.storage.mysql.{TableContinuousFeeder, TableAllLatestFeeder, TableTimelineFeeder, Table}
 import com.wajam.nrv.protocol.codec.GenericJavaSerializeCodec
 import com.wajam.spkr.mry.MrySpkrDatabase
 import com.wajam.spnl.feeder.Feeder._
@@ -46,8 +46,8 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
   // This method will create the spnl Task object from the specified parameters using a default context.
   def createTask(table: Table, action: TaskAction, filter: FeederPredicate, member: ServiceMember, continuous: Boolean) = {
     val feeder = if (continuous) {
-      null
-      //new TableContinuousFeeder(action.name, db.mysqlStorage, table, db.getMemberTokenRanges(member)).withFilter(filter)
+      new TableAllLatestFeeder(action.name, db.mysqlStorage, table, db.getMemberTokenRanges(member))
+        with TableContinuousFeeder
     } else {
       new TableTimelineFeeder(action.name, db.mysqlStorage, table, db.getMemberTokenRanges(member)).withFilter(filter)
     }

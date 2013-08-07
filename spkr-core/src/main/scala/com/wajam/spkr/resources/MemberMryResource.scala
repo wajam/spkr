@@ -1,7 +1,7 @@
 package com.wajam.spkr.resources
 
 import com.wajam.nrv.data.InMessage
-import com.wajam.spkr.mry.{MrySpkDatabaseModel, MrySpkrDatabase}
+import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
 import com.wajam.mry.execution._
 import com.wajam.mry.execution.Implicits._
 import com.wajam.scn.client.ScnClient
@@ -24,7 +24,7 @@ class MemberMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource
   override def get(request: InMessage) {
     info("Received GET request on member resource... " + request)
     db.execute(b => {
-      b.returns(b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE)
+      b.returns(b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE)
         .get(getValidatedKey(request, model.username)))
     }).
       onFailure (handleFailures(request)).
@@ -42,7 +42,7 @@ class MemberMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource
    *  Inserts a new member in the database.
    *  Note: No validation is performed. Inserting a new member using an already existing username will succeed.
    *  Since updates in mry are basically new inserts (to prevent db locks), the scenario described will caused the
-   *  inserted member to behave as an updated version of the previously exising member with the same username.
+   *  inserted member to behave as an updated version of the previously existing member with the same username.
    *
    */
   override def create(request: InMessage) {
@@ -51,18 +51,23 @@ class MemberMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource
     val member = convertJsonValue(getJsonBody(request), model)
     member.get(model.username) match {
       case Some(username) => {
-        insertWithKey(db, username.toString, member,
+        val InsertedMemberFuture = insertWithKey(db, username.toString, member,
           tableAccessor = (b: OperationApi) => {
-            b.from(MrySpkDatabaseModel.STORE_TYPE).from(MrySpkDatabaseModel.MEMBER_TABLE)
-          },
-          onError = (e: Exception) => {request.replyWithError(e)},
-          callback = (value) => {
+            b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE)
+          }
+        )
+
+        InsertedMemberFuture onFailure {
+          case e: Exception => request.replyWithError(e)
+        }
+        InsertedMemberFuture onSuccess {
+          case value => {
             this.respond(request, MryJsonConverter.toJson(value))
             // Note: It would be possible to manually trigger the appropriate percolation here.
             // This would reduce the delay until the data is percolated. The primary percolation scheduled in spnl would
             // act as a "fallback" if the percolation were to fail here. In any case, it is not necessary.
           }
-        )
+        }
       }
       case None =>
         request.replyWithError(new IllegalArgumentException("A username must be specified."))

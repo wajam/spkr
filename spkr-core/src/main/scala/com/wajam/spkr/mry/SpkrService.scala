@@ -36,7 +36,7 @@ class SpkrService(name: String, database: MrySpkrDatabase, protocol: Protocol, s
   registerAction(new Action(SpkrService.memberFeedMessage, handleException(feedMessageResource.get), ActionMethod.GET))
 
   // A method used to wrap the resource behavior with error handling.
-  private def handleException(handler: InMessage => Unit)(msg: InMessage): Unit = {
+  private def handleException(handler: InMessage => Unit):(InMessage=>Unit) = {
     msg:InMessage => {
       try {
         handler(msg)

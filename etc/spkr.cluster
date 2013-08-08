@@ -1,0 +1,22 @@
+# ZookeeperClusterTool configuration file
+
+
+# SCN
+/services/scn=scn
+/services/scn/members/0=0:localhost:nrv=8888
+/services/scn/members/0/votes
+
+# spkr API
+/services/api.spkr/members
+
+# spkr MRY
+/services/mry.spkr=mry.spkr
+/services/mry.spkr/members/1073741824=1073741824:localhost:nrv=8888
+/services/mry.spkr/members/1073741824/votes
+/services/mry.spkr/members/2147483648=2147483648:localhost:nrv=8888
+/services/mry.spkr/members/2147483648/votes
+/services/mry.spkr/members/3221225472=3221225472:localhost:nrv=8888
+/services/mry.spkr/members/3221225472/votes
+/services/mry.spkr/members/4294967296=4294967296:localhost:nrv=8888
+/services/mry.spkr/members/4294967296/votes
+

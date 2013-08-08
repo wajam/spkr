@@ -62,33 +62,7 @@ class MemberMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource
         }
         InsertedMemberFuture onSuccess {
           case value => {
-            println("User created with success!!! attempting to self sub")
             this.respond(request, MryJsonConverter.toJson(value))
-            // On member creation, we'll subscribe the member to himself
-            val selfSubscription = MapValue(Map(
-              Subscription.subscriptionDisplayName -> "I", //this will display "I posted: ..."
-              Subscription.subscriptionUsername -> username.toString,
-              Subscription.username -> username.toString
-            ))
-
-            val InsertedSelfSubscriptionFuture = insertWithScnSequence(
-              db = db,
-              scn = scn,
-              token = request.token,
-              sequenceName = model.id,
-              keyName = Subscription.subscriptionId,
-              newRecord = (selfSubscription),
-              tableAccessor = (b: OperationApi) => {
-                b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE)
-              }
-            )
-
-            InsertedSelfSubscriptionFuture onFailure {
-              case e: Exception => println("ERROR INSERTING SELF SUB:" + e)
-            }
-            InsertedSelfSubscriptionFuture onSuccess {
-              case value =>  println("self sub inserted with success:" + value)
-            }
             // Note: It would be possible to manually trigger the appropriate percolation here.
             // This would reduce the delay until the data is percolated. The primary percolation scheduled in spnl would
             // act as a "fallback" if the percolation were to fail here. In any case, it is optional.

@@ -93,7 +93,8 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
     }
   }
 
-  //Creates and registers a TaskAction using the specified logic
+  // Creates and registers a TaskAction using the specified logic
+  // TODO: this could be refactored to clearly separate continuous, delete, insert and update percolations
   private def registerPercolation(name: String, percolationResource: PercolationResource): TaskAction = {
     val action = new TaskAction(name, (request: SpnlRequest) => {
       info("Percolating on %s with this message: %s".format(name,request.message))
@@ -111,8 +112,13 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
       // Since we only aggregate on insert, we'll assume "old_data" is always worth None to simplify the percolation.
       // see "mutations map" in mry.TableTimelineFeeder for more info on the structure.
       val newRecord = data.get("new_value").get match {
-        case Some(m: MapValue) => m // case: mutation percolation, only the new record should be kept for percolation
-        case _ => data.get(TableAllLatestFeeder.Value).get //case: continuous percolation, extract the the record
+        case Some(m: MapValue) => Some(m) // case: mutation percolation (INSERT), we only want the new record for percolation
+        case _ => {
+          data.get("old_value").get match {
+            case Some(m: MapValue) =>  None // case: mutation percolation (DELETE), don't do anything
+            case _ => Some(data.get(TableAllLatestFeeder.Value)) // case: continuous percolation, extract the the record
+          }
+        }
       }
 
       //Extract the token
@@ -123,9 +129,8 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
       //apply the specified Percolation Resource Task logic to the selected data
       try {
         (keys, newRecord, token) match {
-          case (keySeq: Seq[String], valueMap: MapValue, t: Long) => percolationResource.PercolateTaskLogic(keySeq, valueMap, t)
-          case _ => info("Invalid percolation values format: keys=%s (expected %s), values=%s (expected %s)".
-            format(keys + "(class=%s)".format(keys.getClass), "Seq[String]",newRecord + "(class=%s)".format(newRecord.getClass), "Map[String, Any]" ))
+          case (keySeq: Seq[String], Some(valueMap: MapValue), t: Long) => percolationResource.PercolateTaskLogic(keySeq, valueMap, t)
+          case _ => // Either the format is invalid, or it's a DELETE and we don't want to percolate
         }
         request.ok()
       } catch {

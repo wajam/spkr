@@ -46,13 +46,11 @@ class FeedPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends Perco
                 db = db,
                 scn = scn,
                 token = token,
-                sequenceName = destinationModel.id,
-                keyName = destinationModel.id,
-                newRecord = percolatedFeedMessage,
-                tableAccessor = (b: OperationApi) => {
+                sourceModel,
+                newRecord = percolatedFeedMessage) { (b: OperationApi) => {
                   b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(key1).from(MrySpkrDatabaseModel.FEED_MESSAGE_TABLE)
                 }
-              )
+              }
 
               insertedFeedFuture onFailure {
                 // If the percolation action throws an error, spnl will automatically schedule a retry.

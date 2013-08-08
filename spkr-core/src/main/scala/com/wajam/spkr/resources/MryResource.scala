@@ -149,7 +149,8 @@ object ResponseHeader {
  * Contains methods to insert new data in mry using the specified key or an automatically generated key from scn.
  */
 trait DatabaseHelper {
-  protected def insertWithScnSequence(db:MrySpkrDatabase, scn: ScnClient, token: Long,
+
+    protected def insertWithScnSequence(db:MrySpkrDatabase, scn: ScnClient, token: Long,
                                       sequenceName: String, keyName: String,
                                       newRecord: Map[String, Any], tableAccessor: (OperationApi) => Variable,
                                       keyPrefix: String = ""): Future[Value] = {
@@ -172,6 +173,12 @@ trait DatabaseHelper {
     p future
   }
 
+  protected def insertWithScnSequence(db:MrySpkrDatabase, scn: ScnClient, token: Long,
+                                      model: Model,
+                                      newRecord: Map[String, Any], keyPrefix: String = "")
+                                     (tableAccessor: (OperationApi) => Variable): Future[Value] = {
+    insertWithScnSequence(db, scn, token, model.name, model.id, newRecord, tableAccessor, keyPrefix)
+  }
 
   protected def insertWithKey(db:MrySpkrDatabase, key: String, newObj: Map[String, Any],
                               tableAccessor: (OperationApi) => Variable): Future[Value] = {

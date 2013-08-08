@@ -160,7 +160,7 @@ trait DatabaseHelper {
     // Insert with scn key
     scn.fetchSequenceIds(sequenceName, (sequence: Seq[Long], optException) => {
       optException.headOption match {
-        case e: Exception => p.tryFailure(e)
+        case Some(e: Exception) => p.tryFailure(e)
         case _ => {
           val key = keyPrefix + sequence(0)
           newObj += (keyName -> key)
@@ -190,7 +190,7 @@ trait DatabaseHelper {
         b.returns(table.get(key))
       }, (values, optException) => {
         optException.headOption match {
-          case e: Exception => p.tryFailure(e)
+          case Some(e: Exception) => p.tryFailure(e)
           case _ => p.trySuccess(values.headOption.getOrElse(""))
         }
       }

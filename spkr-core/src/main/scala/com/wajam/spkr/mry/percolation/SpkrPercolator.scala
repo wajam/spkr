@@ -105,6 +105,7 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
       // Extract the keys
       val keys: Seq[String] = data.get(TableAllLatestFeeder.Keys).get match {
         case k: Seq[String] => k
+        case _ =>  throw new IllegalArgumentException()
       }
 
       // Extract the record (values)

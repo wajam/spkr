@@ -1,17 +1,14 @@
 package com.wajam.spkr.resources
 
 import com.wajam.nrv.data.{MString, InMessage}
-import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
-import com.wajam.mry.execution._
-import com.wajam.mry.execution.Implicits._
-import com.wajam.scn.client.ScnClient
+import com.wajam.spkr.mry.MryCalls
 import com.wajam.spkr.json.MryJsonConverter
 import com.wajam.spkr.mry.model.Message
 
 /**
  *
  */
-class MemberMessageMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource(db,scn) {
+class MemberMessageMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
 
   // All the fields associated with a Message
   val model = Message
@@ -25,19 +22,11 @@ class MemberMessageMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryR
     val subscription = convertJsonValue(getJsonBody(request), model)
     request.parameters.get("username") match {
       case (Some(MString(username))) => {
-        val InsertedMessageFuture = insertWithScnSequence(
-          db = db,
-          scn = scn,
-          token = request.token,
-          model,
-          newRecord = (subscription ++ Map(model.username -> username))) {
-            _.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.POST_MESSAGE_TABLE)
-          }
-
-        InsertedMessageFuture onFailure {
+        mryCalls.insertMessage(username, request.token, model, subscription)
+          .onFailure {
           case e: Exception => request.replyWithError(e)
         }
-        InsertedMessageFuture onSuccess {
+          .onSuccess {
           case value => this.respond(request, MryJsonConverter.toJson(value))
         }
       }

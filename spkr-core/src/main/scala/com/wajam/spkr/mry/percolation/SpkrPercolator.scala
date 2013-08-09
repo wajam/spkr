@@ -3,7 +3,7 @@ package com.wajam.spkr.mry.percolation
 import com.wajam.spnl._
 import com.wajam.mry.storage.mysql.{TableContinuousFeeder, TableAllLatestFeeder, TableTimelineFeeder, Table}
 import com.wajam.nrv.protocol.codec.GenericJavaSerializeCodec
-import com.wajam.spkr.mry.MrySpkrDatabase
+import com.wajam.spkr.mry.{MryCalls, MrySpkrDatabase}
 import com.wajam.spnl.feeder.Feeder._
 import com.wajam.nrv.service.{MemberStatus, StatusTransitionEvent, ServiceMember}
 import com.wajam.mry.execution.MapValue
@@ -24,9 +24,10 @@ import com.wajam.nrv.Logging
  *    (like a reverse lookup table, since we can usually only get data using a single ID).
  */
 class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskPersistenceFactory) extends Logging {
+  val mryCalls = new MryCalls(db,scn)
   // The percolation logic is defined in each one of those classes.
-  val subscriberPercolation = new SubscriberPercolationResource(db,scn) // Builds the list of subscribers for each member as subscriptions are made
-  val feedPercolation = new FeedPercolationResource(db,scn) // Builds the feed for each member based on posted messages and subscribed members
+  val subscriberPercolation = new SubscriberPercolationResource(mryCalls) // Builds the list of subscribers for each member as subscriptions are made
+  val feedPercolation = new FeedPercolationResource(mryCalls) // Builds the feed for each member based on posted messages and subscribed members
 
   private val spnl = new Spnl
 

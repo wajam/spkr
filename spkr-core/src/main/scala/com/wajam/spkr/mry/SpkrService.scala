@@ -20,11 +20,14 @@ class SpkrService(name: String, database: MrySpkrDatabase, protocol: Protocol, s
   // Timestamp generator, required by the mry database
   val generator = new TimestampIdGenerator with SynchronizedIdGenerator[Long]
 
+  // MryCalls contains all the queries to access MRY
+  val mryCalls = new MryCalls(database, scn)
+
   // Resources define the exact behavior of evey possible http call
-  val memberResource = new MemberMryResource(database,scn)
-  val subscriptionResource = new MemberSubscriptionMryResource(database,scn)
-  val postMessageResource = new MemberMessageMryResource(database,scn)
-  val feedMessageResource = new MemberFeedMryResource(database,scn)
+  val memberResource = new MemberMryResource(mryCalls)
+  val subscriptionResource = new MemberSubscriptionMryResource(mryCalls)
+  val postMessageResource = new MemberMessageMryResource(mryCalls)
+  val feedMessageResource = new MemberFeedMryResource(mryCalls)
 
   // Each possible http path is mapped with a unique Action, which calls the appropriate resource behavior.
   registerAction(new Action(SpkrService.memberWithId, handleException(memberResource.get), ActionMethod.GET))

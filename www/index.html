@@ -11,12 +11,12 @@
 				cursor:pointer;
 			}
 		</style>
-		<title>spkr social platform</title>
+		<title>SPKR social platform</title>
 	</head>
 	<body>
 		<script src="./libs/jquery-1.10.2.min.js"></script>
 		<script>
-			//TODO: validation. (characters like " aren't validated and may cause XSS vulnerabilities)
+			//TODO: validation. (characters like " aren't validated and may cause XSS issues)
 			$(document).ready(function() {
 				// Hide UI for logged in members (on load)
 				$('#loggedInDiv').hide();
@@ -42,7 +42,7 @@
 				    }
 				});
 
-				// Test query button (check spkr server status)
+				// Test query button (check SPKR server status)
 				$('#testQuery').on('click', function() {
 					$.getJSON(serverIP() + '/status')
 						.done(function() { alert('Server up and running.'); })
@@ -233,10 +233,10 @@
 			}
 		</script>
 		<div style="width:900px; margin:0 auto; border:3px solid black; padding:1em 1em 3em 1em">
-			<div style="text-align:right"><button type="button" id="testQuery">Check spkr Server Status</button></div>
+			<div style="text-align:right"><button type="button" id="testQuery">Check SPKR Server Status</button></div>
 			<table style="width:100%">
 				<tr>
-					<td><h1>spkr social platform</h1></td>
+					<td><h1>SPKR social platform</h1></td>
 				</tr>	
 				<tr>
 					<td>

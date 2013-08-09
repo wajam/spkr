@@ -51,11 +51,9 @@ class MemberMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource
     val member = convertJsonValue(getJsonBody(request), model)
     member.get(model.username) match {
       case Some(username) => {
-        val InsertedMemberFuture = insertWithKey(db, username.toString, member,
-          tableAccessor = (b: OperationApi) => {
-            b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE)
-          }
-        )
+        val InsertedMemberFuture = insertWithKey(db, username.toString, member) {
+            _.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE)
+        }
 
         InsertedMemberFuture onFailure {
           case e: Exception => request.replyWithError(e)
@@ -74,11 +72,9 @@ class MemberMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource
             val InsertedSelfSubscriptionFuture = insertWithKey(
               db = db,
               key = username.toString,
-              newRecord = (selfSubscription),
-              tableAccessor = (b: OperationApi) => {
-                b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE)
+              newRecord = (selfSubscription)) {
+                _.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE)
               }
-            )
 
             InsertedSelfSubscriptionFuture onFailure {
               case e: Exception => error("error subscribing to self: " + e)

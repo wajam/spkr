@@ -151,20 +151,19 @@ object ResponseHeader {
 trait DatabaseHelper {
 
     protected def insertWithScnSequence(db:MrySpkrDatabase, scn: ScnClient, token: Long,
-                                      sequenceName: String, keyName: String,
-                                      newRecord: Map[String, Any], tableAccessor: (OperationApi) => Variable,
-                                      keyPrefix: String = ""): Future[Value] = {
+                                      model: Model,
+                                      newRecord: Map[String, Any]) (tableAccessor: (OperationApi) => Variable): Future[Value] = {
     var newObj = newRecord
     val p = Promise[Value]
 
     // Insert with scn key
-    scn.fetchSequenceIds(sequenceName, (sequence: Seq[Long], optException) => {
+    scn.fetchSequenceIds(model.name, (sequence: Seq[Long], optException) => {
       optException.headOption match {
         case Some(e: Exception) => p.tryFailure(e)
         case _ => {
-          val key = keyPrefix + sequence(0)
-          newObj += (keyName -> key)
-          val insertFuture = insertWithKey(db, key, newObj, tableAccessor)
+          val key = sequence(0).toString
+          newObj += (model.id -> key)
+          val insertFuture = insertWithKey(db, key, newObj) { tableAccessor(_) }
           insertFuture onFailure { case e: Exception =>  p.tryFailure(e) }
           insertFuture onSuccess { case value => p.trySuccess(value) }
         }
@@ -173,15 +172,8 @@ trait DatabaseHelper {
     p future
   }
 
-  protected def insertWithScnSequence(db:MrySpkrDatabase, scn: ScnClient, token: Long,
-                                      model: Model,
-                                      newRecord: Map[String, Any])
-                                     (tableAccessor: (OperationApi) => Variable): Future[Value] = {
-    insertWithScnSequence(db, scn, token, model.name, model.id, newRecord, tableAccessor, "")
-  }
-
-  protected def insertWithKey(db:MrySpkrDatabase, key: String, newRecord: Map[String, Any],
-                              tableAccessor: (OperationApi) => Variable): Future[Value] = {
+  protected def insertWithKey(db:MrySpkrDatabase, key: String, newRecord: Map[String, Any])
+                             (tableAccessor: (OperationApi) => Variable): Future[Value] = {
     val p = Promise[Value]
 
       db.execute(b => {

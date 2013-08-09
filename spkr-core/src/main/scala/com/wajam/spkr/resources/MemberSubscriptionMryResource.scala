@@ -59,11 +59,10 @@ class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends
         val InsertedSubscriptionFuture = insertWithKey(
           db = db,
           key = target,
-          newRecord = subscription,
-          tableAccessor = (b: OperationApi) => {
-            b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE)
+          newRecord = subscription) {
+            _.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE)
           }
-        )
+
         InsertedSubscriptionFuture onFailure {
           case e: Exception => request.replyWithError(e)
         }

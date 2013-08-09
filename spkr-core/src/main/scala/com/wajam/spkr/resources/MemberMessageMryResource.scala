@@ -29,13 +29,11 @@ class MemberMessageMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryR
           db = db,
           scn = scn,
           token = request.token,
-          sequenceName = model.id,
-          keyName = model.id,
-          newRecord = (subscription ++ Map(model.username -> username)),
-          tableAccessor = (b: OperationApi) => {
-            b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.POST_MESSAGE_TABLE)
+          model,
+          newRecord = (subscription ++ Map(model.username -> username))) {
+            _.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.POST_MESSAGE_TABLE)
           }
-        )
+
         InsertedMessageFuture onFailure {
           case e: Exception => request.replyWithError(e)
         }

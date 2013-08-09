@@ -21,9 +21,9 @@ class MemberMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
    */
   override def get(request: InMessage) {
     info("Received GET request on member resource... " + request)
-    mryCalls.getMemberFromUsername(getValidatedKey(request, model.username)).
-      onFailure(handleFailures(request)).
-      onSuccess {
+    val getMemberFuture =  mryCalls.getMemberFromUsername(getValidatedKey(request, model.username))
+    getMemberFuture.onFailure(handleFailures(request))
+    getMemberFuture.onSuccess {
       case Seq(MapValue(member), _*) => {
         this.respond(request, MryJsonConverter.toJson(member))
       }
@@ -46,11 +46,11 @@ class MemberMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
     val member = convertJsonValue(getJsonBody(request), model)
     member.get(model.username) match {
       case Some(username) => {
-        mryCalls.insertMember(username.toString, member)
-          .onFailure {
+        val insertMemberFuture = mryCalls.insertMember(username.toString, member)
+        insertMemberFuture.onFailure {
           case e: Exception => request.replyWithError(e)
         }
-          .onSuccess {
+        insertMemberFuture.onSuccess {
           case value => {
             this.respond(request, MryJsonConverter.toJson(value))
 

@@ -113,14 +113,11 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
       // In the case of mutation percolation, the data is a map containing two records: "old_data" and "new_data".
       // Since we only aggregate on insert, we'll assume "old_data" is always worth None to simplify the percolation.
       // see "mutations map" in mry.TableTimelineFeeder for more info on the structure.
-      val newRecord = data.get("new_value").get match {
-        case Some(m: MapValue) => Some(m) // case: mutation percolation (INSERT), we only want the new record for percolation
-        case _ => {
-          data.get("old_value").get match {
-            case Some(m: MapValue) =>  None // case: mutation percolation (DELETE), don't do anything
-            case _ => Some(data.get(TableAllLatestFeeder.Value)) // case: continuous percolation, extract the the record
-          }
-        }
+      val newRecord = (data.get("new_value").get, data.get("old_value").get) match {
+        case (Some(m: MapValue), None) => Some(m) // case: mutation percolation (INSERT), we only want the new record for percolation
+        case (Some(m: MapValue), Some(_)) => Some(m) // case: mutation percolation (UPDATE)
+        case (None, Some(m: MapValue)) =>  None // case: mutation percolation (DELETE), don't do anything
+        case _ => Some(data.get(TableAllLatestFeeder.Value)) // case: continuous percolation, extract the the record
       }
 
       //Extract the token

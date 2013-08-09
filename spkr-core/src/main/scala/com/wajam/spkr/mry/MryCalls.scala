@@ -98,7 +98,6 @@ trait InsertHelper {
   def scn: ScnClient
 
   protected def insertWithScnSequence(token: Long, model: Model, newRecord: Map[String, Any])(tableAccessor: (OperationApi) => Variable): Future[Value] = {
-    var newObj = newRecord
     val p = Promise[Value]
 
     // Insert with scn key
@@ -107,8 +106,7 @@ trait InsertHelper {
         case Some(e: Exception) => p.tryFailure(e)
         case _ => {
           val key = sequence(0).toString
-          newObj += (model.id -> key)
-          val insertFuture = insertWithKey(key, newObj) {
+          val insertFuture = insertWithKey(key, (newRecord + (model.id -> key))) {
             tableAccessor(_)
           }
           insertFuture onFailure {
@@ -125,18 +123,12 @@ trait InsertHelper {
 
   protected def insertWithKey(key: String, newRecord: Map[String, Any])
                              (tableAccessor: (OperationApi) => Variable): Future[Value] = {
-    val p = Promise[Value]
-
     db.execute(b => {
       val table = tableAccessor(b)
       table.set(key, newRecord)
       b.returns(table.get(key))
-    }, (values, optException) => {
-      optException.headOption match {
-        case Some(e: Exception) => p.tryFailure(e)
-        case _ => p.trySuccess(values.headOption.getOrElse(""))
-      }
-    })
-    p future
+    }) map {
+      case values => values.headOption.getOrElse("")
+    }
   }
 }

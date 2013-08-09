@@ -30,11 +30,11 @@ class SubscriberPercolationResource(mryCalls: MryCalls) extends PercolationResou
       ))
     debug("inserting new subscriber %s from subscription %s".format(percolatedSubscriber, values))
 
-    mryCalls.insertSubscriber(target, subscriber, percolatedSubscriber)
-      .onFailure {
+    val insertSubscriptionFuture = mryCalls.insertSubscriber(target, subscriber, percolatedSubscriber)
+    insertSubscriptionFuture.onFailure {
       case e: Exception => throw e
     }
-      .onSuccess {
+    insertSubscriptionFuture.onSuccess {
       case value => debug("successfully percolated this subscriber: {}", value)
     }
   }

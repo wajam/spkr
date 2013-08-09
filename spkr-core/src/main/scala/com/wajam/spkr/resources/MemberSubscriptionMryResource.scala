@@ -75,14 +75,14 @@ class MemberSubscriptionMryResource(mryCalls: MryCalls) extends MryResource(mryC
     (request.parameters.get(model.username), subscription(model.subscriptionUsername).toString) match {
       case (Some(MString(self)), target) => {
         // We start by removing the user as a subscriber (generated through percolation)
-        mryCalls.deleteSubscriber(self, target)
-          .onFailure(handleFailures(request))
-          .onSuccess({
+        val deleteSubscription = mryCalls.deleteSubscriber(self, target)
+        deleteSubscription.onFailure(handleFailures(request))
+        deleteSubscription.onSuccess({
           case _ => {
             //We then remove the member's subscription
-            mryCalls.deleteSubscription(self, target)
-              .onFailure(handleFailures(request))
-              .onSuccess({
+            val deleteSubscriptionFuture = mryCalls.deleteSubscription(self, target)
+            deleteSubscriptionFuture.onFailure(handleFailures(request))
+            deleteSubscriptionFuture.onSuccess({
               case _ => {
                 this.respondEmptySuccess(request)
                 info("Successfully deleted {}'s subscription to {}", self, target)

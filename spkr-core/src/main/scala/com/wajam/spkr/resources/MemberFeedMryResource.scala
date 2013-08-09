@@ -23,9 +23,9 @@ class MemberFeedMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
     request.parameters.get("username") match {
       case (Some(MString(username))) => {
         info("Received GET request on member_feed resource... " + request)
-        mryCalls.getFeedFromUsername(getValidatedKey(request, model.username))
-          .onFailure(handleFailures(request))
-          .onSuccess {
+        val getFeedFuture =mryCalls.getFeedFromUsername(getValidatedKey(request, model.username))
+        getFeedFuture.onFailure(handleFailures(request))
+        getFeedFuture.onSuccess {
           case Seq(ListValue(feedMessages)) => {
             this.respond(request, MryJsonConverter.toJson(feedMessages))
           }

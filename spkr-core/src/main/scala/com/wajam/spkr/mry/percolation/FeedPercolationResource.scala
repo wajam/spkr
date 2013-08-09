@@ -26,8 +26,8 @@ class FeedPercolationResource(mryCalls: MryCalls) extends PercolationResource(mr
     // We need to get the subscribers of the new message's author, so we can add it to their feeds.
     values.mapValue.get(sourceModel.username) match {
       case Some(StringValue(username)) => {
-        mryCalls.getSubscribersFromUsername(username)
-        .onSuccess { case Seq(ListValue(subscribers)) => {
+        val getSubscriberFuture = mryCalls.getSubscribersFromUsername(username)
+        getSubscriberFuture.onSuccess { case Seq(ListValue(subscribers)) => {
           subscribers.foreach({
             // Create new feed entry
             case MapValue(subscriber) => {
@@ -42,12 +42,12 @@ class FeedPercolationResource(mryCalls: MryCalls) extends PercolationResource(mr
 
               debug("inserting new feed entry for member %s: %s".format(username,percolatedFeedMessage.get(destinationModel.content).get))
 
-              mryCalls.insertFeedEntry(key1.toString,token,destinationModel,percolatedFeedMessage)
-              .onFailure {
+              val percolatedFeedFuture = mryCalls.insertFeedEntry(key1.toString,token,destinationModel,percolatedFeedMessage)
+              percolatedFeedFuture.onFailure {
                 // If the percolation action throws an error, spnl will automatically schedule a retry.
                 case e: Exception => throw e
               }
-              .onSuccess {
+              percolatedFeedFuture.onSuccess {
                 case value => debug("successfully percolated this feed message: {}", value)
               }
             }

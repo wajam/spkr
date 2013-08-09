@@ -88,5 +88,5 @@ object SpkrService {
   val memberSubscriber = "/members/:username/subscribers"
   val memberFeedMessage = "/members/:username/feeds"
   val memberPostMessage = "/members/:username/messages"
-  // val nameWithName = "/names/:display_name" // TODO: implement reverse lookup
+  val nameWithName = "/names/:display_name" // TODO: implement reverse lookup
 }

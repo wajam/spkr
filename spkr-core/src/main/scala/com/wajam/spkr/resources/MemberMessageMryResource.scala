@@ -22,11 +22,11 @@ class MemberMessageMryResource(mryCalls: MryCalls) extends MryResource(mryCalls)
     val subscription = convertJsonValue(getJsonBody(request), model)
     request.parameters.get("username") match {
       case (Some(MString(username))) => {
-        mryCalls.insertMessage(username, request.token, model, subscription)
-          .onFailure {
+        val insertMessageFuture = mryCalls.insertMessage(username, request.token, model, subscription)
+        insertMessageFuture.onFailure {
           case e: Exception => request.replyWithError(e)
         }
-          .onSuccess {
+        insertMessageFuture.onSuccess {
           case value => this.respond(request, MryJsonConverter.toJson(value))
         }
       }

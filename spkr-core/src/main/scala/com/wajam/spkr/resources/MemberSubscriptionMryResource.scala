@@ -5,7 +5,7 @@ import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
 import com.wajam.mry.execution._
 import com.wajam.mry.execution.Implicits._
 import com.wajam.scn.client.ScnClient
-import com.wajam.spkr.mry.model.{Subscriber, Subscription}
+import com.wajam.spkr.mry.model.Subscription
 import com.wajam.spkr.json.MryJsonConverter
 
 class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource(db,scn) {
@@ -52,20 +52,18 @@ class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends
     //TODO: validate if user already exists (maybe check in reverse lookup table "name"?)
     val subscription = convertJsonValue(getJsonBody(request), model)
 
-    request.parameters.get(model.username) match {
-      case (Some(MString(username))) => {
-        val InsertedSubscriptionFuture = insertWithScnSequence(
+
+
+    (request.parameters.get(model.username), subscription(model.subscriptionUsername).toString) match {
+      case (Some(MString(username)), target) => {
+        val InsertedSubscriptionFuture = insertWithKey(
           db = db,
-          scn = scn,
-          token = request.token,
-          sequenceName = model.id,
-          keyName = model.id,
-          newRecord = (subscription ++ Map(model.username -> username)),
+          key = target,
+          newRecord = subscription,
           tableAccessor = (b: OperationApi) => {
             b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE)
           }
         )
-
         InsertedSubscriptionFuture onFailure {
           case e: Exception => request.replyWithError(e)
         }
@@ -87,20 +85,18 @@ class MemberSubscriptionMryResource(db: MrySpkrDatabase, scn: ScnClient) extends
     info("Received DELETE request on member_subscription resource..." + request.toString)
 
     val subscription = convertJsonValue(getJsonBody(request), model)
-    (request.parameters.get(model.username),
-      subscription(model.subscriptionUsername),
-      subscription(model.subscriptionId)) match {
-        case (Some(MString(self)), target, subscriptionId) => {
+    (request.parameters.get(model.username), subscription(model.subscriptionUsername).toString) match {
+        case (Some(MString(self)), target) => {
           // We start by removing the user as a subscriber (generated through percolation)
           db.execute(b => {
-            b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(target.toString).
+            b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(target).
               from(MrySpkrDatabaseModel.SUBSCRIBER_TABLE).delete(self)
           }).onFailure (handleFailures(request))
           .onSuccess( { case _=> {
               //We then remove the member's subscription
               db.execute(b => {
                 b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(self).
-                  from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE).delete(subscriptionId.toString)
+                  from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE).delete(target)
               }).onFailure (handleFailures(request))
                 .onSuccess({
                 case _ => {

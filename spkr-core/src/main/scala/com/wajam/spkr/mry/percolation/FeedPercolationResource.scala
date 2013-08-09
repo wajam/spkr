@@ -41,12 +41,14 @@ class FeedPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends Perco
                 destinationModel.subscriptionDisplayName -> values.mapValue.get(sourceModel.displayName).get,
                 destinationModel.content -> values.mapValue.get(sourceModel.content).get
               ))
-              // Insert new feed entry
+
+              debug("inserting new feed entry for member %s: %s".format(username,percolatedFeedMessage.get(destinationModel.content).get))
+
               val insertedFeedFuture = insertWithScnSequence(
                 db = db,
                 scn = scn,
                 token = token,
-                sourceModel,
+                model = destinationModel,
                 newRecord = percolatedFeedMessage) { (b: OperationApi) => {
                   b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(key1).from(MrySpkrDatabaseModel.FEED_MESSAGE_TABLE)
                 }

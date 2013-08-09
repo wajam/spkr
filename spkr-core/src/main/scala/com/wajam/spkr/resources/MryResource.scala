@@ -175,18 +175,18 @@ trait DatabaseHelper {
 
   protected def insertWithScnSequence(db:MrySpkrDatabase, scn: ScnClient, token: Long,
                                       model: Model,
-                                      newRecord: Map[String, Any], keyPrefix: String = "")
+                                      newRecord: Map[String, Any])
                                      (tableAccessor: (OperationApi) => Variable): Future[Value] = {
-    insertWithScnSequence(db, scn, token, model.name, model.id, newRecord, tableAccessor, keyPrefix)
+    insertWithScnSequence(db, scn, token, model.name, model.id, newRecord, tableAccessor, "")
   }
 
-  protected def insertWithKey(db:MrySpkrDatabase, key: String, newObj: Map[String, Any],
+  protected def insertWithKey(db:MrySpkrDatabase, key: String, newRecord: Map[String, Any],
                               tableAccessor: (OperationApi) => Variable): Future[Value] = {
     val p = Promise[Value]
 
       db.execute(b => {
         val table = tableAccessor(b)
-        table.set(key, newObj)
+        table.set(key, newRecord)
         b.returns(table.get(key))
       }, (values, optException) => {
         optException.headOption match {

@@ -71,12 +71,9 @@ class MemberMryResource(db: MrySpkrDatabase, scn: ScnClient) extends MryResource
               Subscription.username -> username.toString
             ))
 
-            val InsertedSelfSubscriptionFuture = insertWithScnSequence(
+            val InsertedSelfSubscriptionFuture = insertWithKey(
               db = db,
-              scn = scn,
-              token = request.token,
-              sequenceName = model.id,
-              keyName = Subscription.subscriptionId,
+              key = username.toString,
               newRecord = (selfSubscription),
               tableAccessor = (b: OperationApi) => {
                 b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username.toString).from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE)

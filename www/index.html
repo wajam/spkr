@@ -128,9 +128,9 @@
 
 			});
 			// Remove existing subscription (needs to be bound to elements as they are created)
-			function removeSubscription(subscriptionID) {
+			function removeSubscription(subscriptionTarget) {
 				// DELETE query
-				var subscription = findObject(member_subscriptions, 'subscription_id', subscriptionID);
+				var subscription = findObject(member_subscriptions, 'subscription_username', subscriptionTarget);
 				$.ajax({
 					dataType: 'json',
 					url: serverIP() + '/members/' + $('#usernameKey').val() + '/subscriptions/',
@@ -169,15 +169,12 @@
 				var subscriptions_content = "";
 				if(member_subscriptions.length > 0) {
 					$.each(member_subscriptions, function(i, subscription) {
-						var subscription_id = subscription["subscription_id"];
-						var subscription_username = subscription["username"];
-						var subscription_username_id = subscription["subscription_username"];
-						subscriptions_content += '<li id="' + subscription_username + '">' + subscription_username_id + 
-						'<a title="unsubscribe" class="removeSubscription" onClick="removeSubscription('
-						+ subscription_id +')">X</a></div></li>';
+						subscriptions_content += '<li>' + subscription["subscription_username"] + 
+						'<a title="unsubscribe" class="removeSubscription" onClick="removeSubscription(\''
+						+ subscription["subscription_username"] +'\')">X</a></li>';
 					});
 				} else {
-					subscriptions_content = "<li>You don't have any friends yet!</li>"
+					subscriptions_content = "<li>You don't have any subscriptions yet!</li>"
 				}
 				$('#subscription_list').html(subscriptions_content);
 			}

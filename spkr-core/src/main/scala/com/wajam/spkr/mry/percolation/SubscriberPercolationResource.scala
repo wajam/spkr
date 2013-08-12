@@ -1,16 +1,15 @@
 package com.wajam.spkr.mry.percolation
 
-import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
-import com.wajam.scn.client.ScnClient
+import com.wajam.spkr.mry.MryCalls
 import com.wajam.spkr.mry.model.{Subscriber, Subscription}
-import com.wajam.mry.execution.{OperationApi, MapValue}
+import com.wajam.mry.execution.MapValue
 import com.wajam.mry.execution.Implicits._
 
 /**
- *  Subscriber aggregation resource via percolation: This class builds the list of subscribers that are subscribed to
- *  each member, as members insert new subscriptions.
+ * Subscriber aggregation resource via percolation: This class builds the list of subscribers that are subscribed to
+ * each member, as members insert new subscriptions.
  */
-class SubscriberPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends PercolationResource {
+class SubscriberPercolationResource(mryCalls: MryCalls) extends PercolationResource(mryCalls) {
 
   private val sourceModel = Subscription
   private val destinationModel = Subscriber
@@ -22,27 +21,20 @@ class SubscriberPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends
   override def PercolateTaskLogic(keys: Seq[String], values: MapValue, token: Long) {
     // The username of the member targeted by the subscription becomes the new primary key. This way, all the subscribers
     // for the given member will be sharded on a the same node. The second key, the subscriber's username, makes the record unique.
-    val key1 = values.mapValue.get(sourceModel.subscriptionUsername).get
-    val key2 = values.mapValue.get(sourceModel.username).get
+    val target = keys(1) // sharded by subscription target
+    val subscriber = keys(0) // the source of the subscription becomes the subscriber
     val percolatedSubscriber = MapValue(Map(
-      destinationModel.username -> key1,
-      destinationModel.subscriberUsername -> key2,
-      destinationModel.subscriberDisplayName -> "unknown user" // This would require another query. It would be useful fpr some features, like showing a list of all members subscribed to a given member
-    ))
+        destinationModel.username -> target,
+        destinationModel.subscriberUsername -> subscriber,
+        destinationModel.subscriberDisplayName -> "unknown user" // This would require another query. It would be useful fpr some features, like showing a list of all members subscribed to a given member
+      ))
     debug("inserting new subscriber %s from subscription %s".format(percolatedSubscriber, values))
 
-    val InsertedSubscriberFuture = insertWithKey(
-      db = db,
-      key = key2.value.toString,
-      newObj = percolatedSubscriber,
-      tableAccessor = (b: OperationApi) => {
-        b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(key1).from(MrySpkrDatabaseModel.SUBSCRIBER_TABLE)
-      })
-
-    InsertedSubscriberFuture onFailure {
+    val insertSubscriptionFuture = mryCalls.insertSubscriber(target, subscriber, percolatedSubscriber)
+    insertSubscriptionFuture.onFailure {
       case e: Exception => throw e
     }
-    InsertedSubscriberFuture onSuccess {
+    insertSubscriptionFuture.onSuccess {
       case value => debug("successfully percolated this subscriber: {}", value)
     }
   }

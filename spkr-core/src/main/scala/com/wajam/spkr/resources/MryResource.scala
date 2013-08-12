@@ -2,7 +2,7 @@ package com.wajam.spkr.resources
 
 import com.wajam.mry.execution.{Value, Variable, OperationApi, MapValue}
 import com.wajam.mry.execution.Implicits._
-import com.wajam.spkr.mry.MrySpkrDatabase
+import com.wajam.spkr.mry.{MryCalls, MrySpkrDatabase}
 import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model.{PropertyType, Model}
 import net.liftweb.json._
@@ -18,7 +18,7 @@ import com.wajam.nrv.utils.{Promise, Future}
  * SpkrService.
  *
  */
-abstract class MryResource(protected val db: MrySpkrDatabase, scn: ScnClient) extends MessageHelper with ParamExtractor with DatabaseHelper with JsonHelper with Logging {
+abstract class MryResource(protected val mryCalls: MryCalls) extends MessageHelper with ParamExtractor with JsonHelper with Logging {
 
   /**
    * Respond to GET resource/
@@ -140,56 +140,9 @@ object ResponseHeader {
   val RESPONSE_HEADERS = Map (
     "Content-Type" -> "application/json; charset=UTF-8",
     "Access-Control-Allow-Origin" -> "*",
-    "Access-Control-Allow-Methods" -> "GET,POST,OPTIONS",
+    "Access-Control-Allow-Methods" -> "GET,POST,DELETE,PUT,OPTIONS",
     "Access-Control-Allow-Headers" -> "Content-Type"
   )
-}
-
-/**
- * Contains methods to insert new data in mry using the specified key or an automatically generated key from scn.
- */
-trait DatabaseHelper {
-  protected def insertWithScnSequence(db:MrySpkrDatabase, scn: ScnClient, token: Long,
-                                      sequenceName: String, keyName: String,
-                                      newRecord: Map[String, Any], tableAccessor: (OperationApi) => Variable,
-                                      keyPrefix: String = ""): Future[Value] = {
-    var newObj = newRecord
-    val p = Promise[Value]
-
-    // Insert with scn key
-    scn.fetchSequenceIds(sequenceName, (sequence: Seq[Long], optException) => {
-      optException.headOption match {
-        case Some(e: Exception) => p.tryFailure(e)
-        case _ => {
-          val key = keyPrefix + sequence(0)
-          newObj += (keyName -> key)
-          val insertFuture = insertWithKey(db, key, newObj, tableAccessor)
-          insertFuture onFailure { case e: Exception =>  p.tryFailure(e) }
-          insertFuture onSuccess { case value => p.trySuccess(value) }
-        }
-      }
-    }, 1, token)
-    p future
-  }
-
-
-  protected def insertWithKey(db:MrySpkrDatabase, key: String, newObj: Map[String, Any],
-                              tableAccessor: (OperationApi) => Variable): Future[Value] = {
-    val p = Promise[Value]
-
-      db.execute(b => {
-        val table = tableAccessor(b)
-        table.set(key, newObj)
-        b.returns(table.get(key))
-      }, (values, optException) => {
-        optException.headOption match {
-          case Some(e: Exception) => p.tryFailure(e)
-          case _ => p.trySuccess(values.headOption.getOrElse(""))
-        }
-      }
-    )
-    p future
-  }
 }
 
 /**

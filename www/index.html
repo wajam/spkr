@@ -4,24 +4,23 @@
 		<meta charset="utf-8" />
 		<style>
 			h1,h2,h3,h4 {text-align:center;}
+			.removeSubscription {
+				float:right;
+				color:red;
+				font-family:Arial;
+				cursor:pointer;
+			}
 		</style>
-		<title>spkr social platform</title>
+		<title>SPKR social platform</title>
 	</head>
 	<body>
 		<script src="./libs/jquery-1.10.2.min.js"></script>
 		<script>
-			//TODO: validation. (characters like " aren't validated and may cause XSS vulnerabilities)
+			//TODO: validation. (characters like " aren't validated and may cause XSS issues)
 			$(document).ready(function() {
 				// Hide UI for logged in members (on load)
 				$('#loggedInDiv').hide();
 				$('#memberUI').hide();
-
-				// Test query button (check spkr server status)
-				$('#testQuery').on('click', function() {
-					$.getJSON(serverIP() + '/status')
-						.done(function() { alert('Server up and running.'); })
-						.fail(function() { alert('Error, unable to contact server.'); });
-				});
 
 				// Textbox enter trigger
 				// Login
@@ -43,6 +42,13 @@
 				    }
 				});
 
+				// Test query button (check SPKR server status)
+				$('#testQuery').on('click', function() {
+					$.getJSON(serverIP() + '/status')
+						.done(function() { alert('Server up and running.'); })
+						.fail(function() { alert('Error, unable to contact server.'); });
+				});
+
 				// Display name form ajax query (register/signup)
 				$('#loginButton').on('click', function() {
 					//First, we query to check if the username exists
@@ -62,7 +68,7 @@
 
 							})
 							.done(function(data) { successfulLogin(data) })
-							.fail(function() { alert('Error, unable to register new member.');
+							.fail(function() { alert('Error, unable to login/register new member.');
 						});
 					});
 				});
@@ -110,7 +116,7 @@
 							type:'POST',
 							data: '{"username":"' + $('#usernameKey').val() +
 								'", "message_content":"' + message_content +
-								'", "message_display_name":"' + $('#usernameKey').val() + '"}'//TODO: use the display name from the local display name form
+								'", "message_display_name":"' + $('#usernameKey').val() + '"}'//TODO: use the display name from a display name form
 						})
 						.done(function(data) {
 							$('#messageContent').val('');
@@ -121,6 +127,20 @@
 				
 
 			});
+			// Remove existing subscription (needs to be bound to elements as they are created)
+			function removeSubscription(subscriptionTarget) {
+				// DELETE query
+				var subscription = findObject(member_subscriptions, 'subscription_username', subscriptionTarget);
+				$.ajax({
+					dataType: 'json',
+					url: serverIP() + '/members/' + $('#usernameKey').val() + '/subscriptions/',
+					contentType: "application/json",
+					type:'DELETE',
+					data: JSON.stringify(subscription, null, 2)
+				})
+				.done(function(data) { reloadSubscriptions() })
+				.fail(function() { alert('Error, unable to unsubscribe.'); });
+			}
 			// Login ui display helper
 			function successfulLogin(data) {
 				var display_name = data["display_name"];
@@ -148,14 +168,13 @@
 			function displaySubscriptions() {
 				var subscriptions_content = "";
 				if(member_subscriptions.length > 0) {
-					$.each(member_subscriptions, function(i, subscription)  {
-						var subscription_id = subscription["subscription_id"];
-						var subscription_username = subscription["username"];
-						var subscription_username_id = subscription["subscription_username"];
-						subscriptions_content += '<li id="' + subscription_username + '">' + subscription_username_id + '</li>';
+					$.each(member_subscriptions, function(i, subscription) {
+						subscriptions_content += '<li>' + subscription["subscription_username"] + 
+						'<a title="unsubscribe" class="removeSubscription" onClick="removeSubscription(\''
+						+ subscription["subscription_username"] +'\')">X</a></li>';
 					});
 				} else {
-					subscriptions_content = "<li>You don't have any friends yet!</li>"
+					subscriptions_content = "<li>You don't have any subscriptions yet!</li>"
 				}
 				$('#subscription_list').html(subscriptions_content);
 			}
@@ -174,18 +193,27 @@
 			function serverIP(){
 				return $('#serverAddress').val();
 			}
-			// JSon object sorter helper
+			// JSon object collection sorter helper
 			function sortResults(data, prop, asc) {
 			    data = data.sort(function(a, b) {
 				if (asc) return (a[prop] > b[prop]) ? 1 : ((a[prop] < b[prop]) ? -1 : 0);
 				else return (b[prop] > a[prop]) ? 1 : ((b[prop] < a[prop]) ? -1 : 0);
 			    });
-			}			
+			}	
+			// JSon object seach helper
+			function findObject(data, field_name, value) {
+				var ret = {};
+				$.each(member_subscriptions, function(i, subscription)  {
+					if(subscription[field_name] == value)
+						ret = subscription;
+				});
+				return ret;
+			}		
 			// Feed refresh helper
 			function refreshFeed() {
 				// Ajax feed refresh call only if the user is logged
 				if(!isEmpty($('#usernameKey').val())) {
-					setTimeout(refreshFeed,1000);
+					setTimeout(refreshFeed,1500); //This auto-refresh timer does not scale. Connexion should be opened by client and pending on server until data is available.
 					$.getJSON(serverIP() + '/members/' + $('#usernameKey').val() + '/feeds/')
 						.done(function(feed) {
 							sortResults(feed, 'feed_id', false)
@@ -205,10 +233,10 @@
 			}
 		</script>
 		<div style="width:900px; margin:0 auto; border:3px solid black; padding:1em 1em 3em 1em">
-			<div style="text-align:right"><button type="button" id="testQuery">Check spkr Server Status</button></div>
+			<div style="text-align:right"><button type="button" id="testQuery">Check SPKR Server Status</button></div>
 			<table style="width:100%">
 				<tr>
-					<td><h1>spkr social platform</h1></td>
+					<td><h1>SPKR social platform</h1></td>
 				</tr>	
 				<tr>
 					<td>
@@ -227,7 +255,7 @@
 				</tr>
 				<tr>
 					<td><div id="memberUI">
-						<div style="float:left;width:30%;">
+						<div style="float:left;width:30%;" name="subscriptionFrame">
 							<h4>Your subscriptions</h4>
 							<div style="width:95%;border:2px solid black">
 								<ul id="subscription_list" style="padding-right:1em"></ul>

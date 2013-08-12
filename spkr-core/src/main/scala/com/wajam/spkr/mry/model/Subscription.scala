@@ -8,13 +8,11 @@ package com.wajam.spkr.mry.model
 
 object Subscription extends Model {
   val username = "username"
-  val subscriptionId = "subscription_id"
   val subscriptionUsername = "subscription_username"
   val subscriptionDisplayName = "subscription_display_name"
 
-  override def id = subscriptionId
+  override def id = subscriptionUsername
   val definition = Map(
-    subscriptionId -> PropertyType.Number,
     username -> PropertyType.String,
     subscriptionUsername -> PropertyType.String,
     subscriptionDisplayName -> PropertyType.String

@@ -20,11 +20,14 @@ class SpkrService(name: String, database: MrySpkrDatabase, protocol: Protocol, s
   // Timestamp generator, required by the mry database
   val generator = new TimestampIdGenerator with SynchronizedIdGenerator[Long]
 
+  // MryCalls contains all the queries to access MRY
+  val mryCalls = new MryCalls(database, scn)
+
   // Resources define the exact behavior of evey possible http call
-  val memberResource = new MemberMryResource(database,scn)
-  val subscriptionResource = new MemberSubscriptionMryResource(database,scn)
-  val postMessageResource = new MemberMessageMryResource(database,scn)
-  val feedMessageResource = new MemberFeedMryResource(database,scn)
+  val memberResource = new MemberMryResource(mryCalls)
+  val subscriptionResource = new MemberSubscriptionMryResource(mryCalls)
+  val postMessageResource = new MemberMessageMryResource(mryCalls)
+  val feedMessageResource = new MemberFeedMryResource(mryCalls)
 
   // Each possible http path is mapped with a unique Action, which calls the appropriate resource behavior.
   registerAction(new Action(SpkrService.memberWithId, handleException(memberResource.get), ActionMethod.GET))
@@ -32,6 +35,7 @@ class SpkrService(name: String, database: MrySpkrDatabase, protocol: Protocol, s
   registerAction(new Action(SpkrService.member, handleException(memberResource.get), ActionMethod.GET))
   registerAction(new Action(SpkrService.memberSubscription, handleException(subscriptionResource.create), ActionMethod.POST))
   registerAction(new Action(SpkrService.memberSubscription, handleException(subscriptionResource.get), ActionMethod.GET))
+  registerAction(new Action(SpkrService.memberSubscription, handleException(subscriptionResource.delete), ActionMethod.DELETE))
   registerAction(new Action(SpkrService.memberPostMessage, handleException(postMessageResource.create), ActionMethod.POST))
   registerAction(new Action(SpkrService.memberFeedMessage, handleException(feedMessageResource.get), ActionMethod.GET))
 
@@ -59,6 +63,7 @@ class SpkrService(name: String, database: MrySpkrDatabase, protocol: Protocol, s
    * This is needed to support most browsers, which use the CORS mechanism (Cross-origin resource sharing).
    */
   override def registerAction(action: Action) = {
+
     super.registerAction(
       new Action(action.path, request => {
         request.reply(Map(), ResponseHeader.RESPONSE_HEADERS, Map(), 200)
@@ -75,7 +80,7 @@ class SpkrService(name: String, database: MrySpkrDatabase, protocol: Protocol, s
 }
 
 object SpkrService {
-  // Here are all the actions supported by the HTTP REST API for each and every ressources:
+  // Here are all the actions supported by the HTTP REST API for each and every resources:
   val test = "/status"
   val member = "/members"
   val memberWithId = "/members/:username"
@@ -83,5 +88,5 @@ object SpkrService {
   val memberSubscriber = "/members/:username/subscribers"
   val memberFeedMessage = "/members/:username/feeds"
   val memberPostMessage = "/members/:username/messages"
-  val nameWithName = "/names/:display_name"
+  val nameWithName = "/names/:display_name" // TODO: implement reverse lookup
 }

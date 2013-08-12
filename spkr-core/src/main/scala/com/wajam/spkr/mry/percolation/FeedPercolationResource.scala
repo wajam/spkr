@@ -1,6 +1,6 @@
 package com.wajam.spkr.mry.percolation
 
-import com.wajam.spkr.mry.{MrySpkrDatabaseModel, MrySpkrDatabase}
+import com.wajam.spkr.mry.{MryCalls, MrySpkrDatabaseModel, MrySpkrDatabase}
 import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model._
 import com.wajam.mry.execution.{StringValue, ListValue, OperationApi, MapValue}
@@ -11,7 +11,7 @@ import com.wajam.nrv.Logging
  *  Feed aggregation resource via percolation: This class builds the list of messages that are displayed on each user's
  *  feed as they are posted by other members..
  */
-class FeedPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends PercolationResource with Logging {
+class FeedPercolationResource(mryCalls: MryCalls) extends PercolationResource(mryCalls) with Logging {
 
   private val sourceModel = Message
   private val destinationModel = Feed
@@ -26,42 +26,30 @@ class FeedPercolationResource(db: MrySpkrDatabase, scn: ScnClient) extends Perco
     // We need to get the subscribers of the new message's author, so we can add it to their feeds.
     values.mapValue.get(sourceModel.username) match {
       case Some(StringValue(username)) => {
-        db.execute(b => {
-          b.returns(b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username)
-            .from(MrySpkrDatabaseModel.SUBSCRIBER_TABLE).get())
-        }).onSuccess { case Seq(ListValue(subscribers)) => {
+        val getSubscriberFuture = mryCalls.getSubscribersFromUsername(username)
+        getSubscriberFuture.onSuccess { case Seq(ListValue(subscribers)) => {
           subscribers.foreach({
             // Create new feed entry
             case MapValue(subscriber) => {
               val key1 = subscriber.get(subscriberModel.subscriberUsername).get
-              // note: key2 is an auto-generated scn id to make every feed entry unique
+              // note: key2 is an auto-generated scn id to make every feed entry unique, and used to sort the messages
               val percolatedFeedMessage = MapValue(Map(
                 destinationModel.username -> key1,
                 destinationModel.subscriptionUsername -> values.mapValue.get(sourceModel.username).get,
                 destinationModel.subscriptionDisplayName -> values.mapValue.get(sourceModel.displayName).get,
                 destinationModel.content -> values.mapValue.get(sourceModel.content).get
               ))
-              // Insert new feed entry
-              val insertedFeedFuture = insertWithScnSequence(
-                db = db,
-                scn = scn,
-                token = token,
-                sequenceName = destinationModel.id,
-                keyName = destinationModel.id,
-                newRecord = percolatedFeedMessage,
-                tableAccessor = (b: OperationApi) => {
-                  b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(key1).from(MrySpkrDatabaseModel.FEED_MESSAGE_TABLE)
-                }
-              )
 
-              insertedFeedFuture onFailure {
+              debug("inserting new feed entry for member %s: %s".format(username,percolatedFeedMessage.get(destinationModel.content).get))
+
+              val percolatedFeedFuture = mryCalls.insertFeedEntry(key1.toString,token,destinationModel,percolatedFeedMessage)
+              percolatedFeedFuture.onFailure {
                 // If the percolation action throws an error, spnl will automatically schedule a retry.
                 case e: Exception => throw e
               }
-              insertedFeedFuture onSuccess {
+              percolatedFeedFuture.onSuccess {
                 case value => debug("successfully percolated this feed message: {}", value)
               }
-
             }
             case a => info("Percolation failed, expected MapValue, but got this instead: " + a) // print error msg, unknown content
           })

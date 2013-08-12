@@ -19,9 +19,9 @@ class MemberSubscriptionMryResource(mryCalls: MryCalls) extends MryResource(mryC
     request.parameters.get(model.username) match {
       case (Some(MString(username))) => {
         info("Received GET request on member_subscription resource... " + request)
-        mryCalls.getSubscriptionsFromUserName(getValidatedKey(request, model.username))
-          .onFailure(handleFailures(request))
-          .onSuccess {
+        val getSubscriptionFuture = mryCalls.getSubscriptionsFromUserName(getValidatedKey(request, model.username))
+        getSubscriptionFuture.onFailure(handleFailures(request))
+        getSubscriptionFuture.onSuccess {
           case Seq(ListValue(subscriptions)) => {
             this.respond(request, MryJsonConverter.toJson(subscriptions))
           }
@@ -45,16 +45,16 @@ class MemberSubscriptionMryResource(mryCalls: MryCalls) extends MryResource(mryC
   override def create(request: InMessage) {
     info("Received CREATE request on member_subscription resource..." + request.toString)
 
-    //TODO: validate if user already exists (maybe check in reverse lookup table "name"?)
+    // TODO: validate if user already exists (maybe check in reverse lookup table "name"?)
     val subscription = convertJsonValue(getJsonBody(request), model)
 
     (request.parameters.get(model.username), subscription(model.subscriptionUsername).toString) match {
       case (Some(MString(username)), target) => {
-        mryCalls.insertSubscription(username, target, subscription)
-          .onFailure {
+        val insertSubscriptionFuture = mryCalls.insertSubscription(username, target, subscription)
+        insertSubscriptionFuture.onFailure {
           case e: Exception => request.replyWithError(e)
         }
-          .onSuccess {
+        insertSubscriptionFuture.onSuccess {
           case value => this.respond(request, MryJsonConverter.toJson(value))
         }
       }

@@ -61,11 +61,11 @@ class MemberMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
               Subscription.username -> username.toString
             ))
 
-            mryCalls.insertSubscription(username.toString, username.toString, selfSubscription)
-              .onFailure {
+            val insertMemberFuture = mryCalls.insertSubscription(username.toString, username.toString, selfSubscription)
+            insertMemberFuture.onFailure {
               case e: Exception => error("Error subscribing to self: " + e)
             }
-              .onSuccess {
+            insertMemberFuture.onSuccess {
               case value => debug("Self subscription inserted with success: " + value)
             }
 

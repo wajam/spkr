@@ -21,7 +21,7 @@ class MemberMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
    */
   override def get(request: InMessage) {
     info("Received GET request on member resource... " + request)
-    val getMemberFuture =  mryCalls.getMemberFromUsername(getValidatedKey(request, model.username))
+    val getMemberFuture = mryCalls.getMemberFromUsername(getValidatedKey(request, model.username))
     getMemberFuture.onFailure(handleFailures(request))
     getMemberFuture.onSuccess {
       case Seq(MapValue(member), _*) => {

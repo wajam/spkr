@@ -5,6 +5,7 @@ import org.apache.log4j.PropertyConfigurator
 import java.net.URL
 import com.wajam.nrv.Logging
 import com.wajam.spkr.cluster.{ZookeeperSpkrClusterCreator, StaticSpkrClusterCreator, Services}
+import java.io.File
 
 /**
  *  Main object. It creates an instance of SpkServer (see below), and launches it.
@@ -15,7 +16,8 @@ object Spkr extends App with Logging {
 
   try {
     // Init log4j. See 'log4j.configuration' in '/spkr/etc/' to edit config.
-    PropertyConfigurator.configureAndWatch(new URL(System.getProperty("log4j.configuration")).getFile, 5000L)
+    val logFile = System.getProperty("log4j.configuration", "file://" + new File("etc/log4j.properties").getCanonicalPath)
+    PropertyConfigurator.configureAndWatch(new URL(logFile).getFile, 5000L)
     val config = SpkrConfig.fromDefaultConfigurationPath
     val server: SpkServer = new SpkServer(config)
 
@@ -24,6 +26,7 @@ object Spkr extends App with Logging {
     server.startAndBlock()
   } catch {
     case e: Exception => {
+      println("Fatal error starting SPKR. Exiting SPKR server.", e) // Print error even when logger unavailable
       error("Fatal error starting SPKR. Exiting SPKR server.", e)
       System.exit(1)
     }

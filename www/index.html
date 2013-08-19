@@ -10,13 +10,17 @@
 				font-family:Arial;
 				cursor:pointer;
 			}
+			.leftFrameForm {
+				width:95%;
+				border:2px solid black
+			}
 		</style>
 		<title>SPKR social platform</title>
 	</head>
 	<body>
 		<script src="./libs/jquery-1.10.2.min.js"></script>
 		<script>
-			//TODO: validation. (characters like " aren't validated and may cause XSS issues)
+			//TODO: validation/encoding. (characters like " and < aren't validated and cause XSS issues)
 			$(document).ready(function() {
 				// Hide UI for logged in members (on load)
 				$('#loggedInDiv').hide();
@@ -47,6 +51,12 @@
 					$.getJSON(serverIP() + '/status')
 						.done(function() { alert('Server up and running.'); })
 						.fail(function() { alert('Error, unable to contact server.'); });
+				});
+				// Display Name update
+				$('#displayName').keyup(function(event){
+				    if(event.keyCode == 13){
+					$('#displayNameButton').click();
+				    }
 				});
 
 				// Display name form ajax query (register/signup)
@@ -116,7 +126,7 @@
 							type:'POST',
 							data: '{"username":"' + $('#usernameKey').val() +
 								'", "message_content":"' + message_content +
-								'", "message_display_name":"' + $('#usernameKey').val() + '"}'//TODO: use the display name from a display name form
+								'", "message_display_name":"' + member_display_name + '"}'
 						})
 						.done(function(data) {
 							$('#messageContent').val('');
@@ -124,7 +134,26 @@
 						.fail(function() { alert('Error, unable to post new message.'); });
 					}
 				});
-				
+				// Update display name
+				$('#displayNameButton').on('click', function() {
+					var new_display_name = $('#displayName').val();
+					// Check if the message is not empty
+					if(!isEmpty(new_display_name)) {
+						// Post the message and refresh feed!
+						$.ajax({
+							dataType: 'json',
+							url: serverIP() + '/members/' + $('#usernameKey').val() + '/',
+							contentType: "application/json",
+							type:'PUT',
+							data: '{"display_name":"' + new_display_name + '"}'
+						})
+						.done(function(data) {
+							member_display_name = new_display_name;
+							alert('Your display name is now ' + new_display_name + '')
+						})
+						.fail(function() { alert('Error, unable to update display name.'); });
+					}
+				});
 
 			});
 			// Remove existing subscription (needs to be bound to elements as they are created)
@@ -143,17 +172,20 @@
 			}
 			// Login ui display helper
 			function successfulLogin(data) {
-				var display_name = data["display_name"];
+				member_display_name = data["display_name"];
 				var username = data["username"];
-				$('#displayNameWelcome').text(display_name);
+				$('#displayNameWelcome').text(username);
+				$('#displayName').val(member_display_name);
 				$('#loginDiv').hide();
 				$('#loggedInDiv').show();
 				$('#usernameKey').val(username);
 				$('#memberUI').show();
-				reloadSubscriptions()
+				reloadSubscriptions();
 				//Periodic refresh feed call
 				refreshFeed();
 			}
+			// Global variable containing the display name
+			var member_display_name;
 			// Subscription refresh helpers, all subs are stored locally in member_subscriptions
 			var member_subscriptions;
 			function reloadSubscriptions() {
@@ -256,16 +288,21 @@
 				<tr>
 					<td><div id="memberUI">
 						<div style="float:left;width:30%;" name="subscriptionFrame">
+
 							<h4>Your subscriptions</h4>
-							<div style="width:95%;border:2px solid black">
-								<ul id="subscription_list" style="padding-right:1em"></ul>
+							<div class="leftFrameForm" style="margin-bottom:0.3em;">
+								<ul id="subscription_list" style="padding-right:1em;"></ul>
 							</div>
-							<br />
 							Subscribe to someone!
 							<br />
-							<input type="text" name="subscriptionTarget" id="subscriptionTarget" style="width:50%" />
+							<input type="text" name="subscriptionTarget" id="subscriptionTarget" style="width:75%" />
 							<br />
 							<button type="button" id="subscribeButton">subscribe!</button>
+							<p style="padding-top:5em;">
+								Change your display name!
+								<input type="text" name="displayName" id="displayName" style="width:75%;" />
+								<button type="button" id="displayNameButton">update</button>
+							</p>
 						</div>
 						<div style="float:right;width:70%;">
 							<h4>Your Feed</h4>
@@ -275,7 +312,7 @@
 							<button type="button" id="postButton" style="float:right">post!</button>
 							<br />
 							<br />
-							<div style="width:99%;border:2px solid black;" id="feedContent"> </div>
+							<div style="width:99%;border:2px solid black;padding-bottom:2em;" id="feedContent"> </div>
 						</div>
 					</div></td>
 				</tr>

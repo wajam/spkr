@@ -26,8 +26,8 @@
 # master node in a first entry, and in a second entry, its "/votes" path is created. The vote path is used by service
 # members to vote on whether the member is up or not, increasing the cluster's tolerance to faults. In the current
 # version of nrv, service members are the only allowed and vote for themselves. They do so when they are ready to change
-# status. This implementation is currently ok, but would be required for the cluster to function properly with more
-# advanced features causing possible inconsistencies.
+# status. This implementation is currently ok, but consensus between all nodes would be required for the cluster to
+# function properly with advanced features causing possible inconsistencies.
 # As for the tokens, they have been carefully computed to split the total range from 0 to 4294967296 into equally sized
 # shards. Statistically speaking, this will spread the load evenly between nodes.
 /services/mry.spkr=mry.spkr

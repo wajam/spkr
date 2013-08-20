@@ -1,15 +1,35 @@
 # ZookeeperClusterTool configuration file
+# ZooKeeper uses a tree structure to store configurations.
+# These configurations define the cluster by identifying the master service member for all tokens in the hash ring.
+# Each service member is defined by a node and a shard (i.e. a token range).
+# Since all possible tokens from 0 to Int.Max (2³²-1) need to be associated to exactly 1 shard, the shards are defined
+# by a single inclusive token upper bound. The rest of the token range is interpolated using the previous upper bound.
+
+# The exact syntax used to define a service member is as follow:
+# <Token>:<Hostname>:nrv=<NRV port>[,<Other_Port_Name>=<Port>]
 
 
 # SCN
+# By default, only a single SCN service member handles all the load. An arbitrary token (0) is associated to it.
+# To distribute the load for id & timestamp generation, SCN hashes the unique name of the id sequence. This will force
+# a given id sequence to always be generated on the same scn node, thereby generating consistent ids between calls.
 /services/scn=scn
 /services/scn/members/0=0:localhost:nrv=8888
 /services/scn/members/0/votes
 
-# spkr API
+# SPKR API
+# This next line simply creates the baseline path used by all SPKR services to register themselves as a node.
 /services/api.spkr/members
 
-# spkr MRY
+# SPKR MRY
+# This section maps each master service member with its node. Each shard defined by its upper bound is mapped to a
+# master node in a first entry, and in a second entry, its "/votes" path is created. The vote path is used by service
+# members to vote on whether the member is up or not, increasing the cluster's tolerance to faults. In the current
+# version of nrv, service members are the only allowed and vote for themselves. They do so when they are ready to change
+# status. This implementation is currently ok, but consensus between all nodes would be required for the cluster to
+# function properly with advanced features causing possible inconsistencies.
+# As for the tokens, they have been carefully computed to split the total range from 0 to 4294967296 into equally sized
+# shards. Statistically speaking, this will spread the load evenly between nodes.
 /services/mry.spkr=mry.spkr
 /services/mry.spkr/members/1073741824=1073741824:localhost:nrv=8888
 /services/mry.spkr/members/1073741824/votes
@@ -19,4 +39,3 @@
 /services/mry.spkr/members/3221225472/votes
 /services/mry.spkr/members/4294967296=4294967296:localhost:nrv=8888
 /services/mry.spkr/members/4294967296/votes
-

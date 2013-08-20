@@ -103,7 +103,7 @@ message_content</panel_attributes>
     </coordinates>
     <panel_attributes>contains all the
 subscribers of
-all member on
+all members on
 the local shard
 bg=yellow</panel_attributes>
     <additional_attributes/>
@@ -158,7 +158,7 @@ bg=yellow</panel_attributes>
       <h>80</h>
     </coordinates>
     <panel_attributes>contains all the
-subscription for
+subscriptions for
 the members on
 the local shard
 bg=yellow</panel_attributes>

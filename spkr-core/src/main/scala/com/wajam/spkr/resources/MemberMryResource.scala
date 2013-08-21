@@ -81,7 +81,7 @@ class MemberMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
   }
 
   /**
-   * Updates a member's display name by username. To prevent database locks, mry does not update fields. Instead in
+   * Updates a member's display name by username. For data consistency reasons, mry does not update fields. Instead in
    * inserts a new record using the same key, but with updated values. The garbage collection system will eventually
    * delete the old record.
    */

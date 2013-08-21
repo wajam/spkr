@@ -35,8 +35,8 @@ class MrySpkrDatabase(name:String, config: SpkrConfig) extends Database(name) {
   // register the storage engine
   registerStorage(mysqlStorage)
 
-  // To prevent db locks, MRY never updates a record. Instead, in inserts a new one with an identical key and token.
-  // This creates redundant records that need to be garbage collected.
+  // For data consistency reasons, MRY never updates a record. Instead, in inserts a new one with an identical key and
+  // token. This creates redundant records that need to be garbage collected.
   mysqlStorage.GarbageCollector.setCollectedRanges(List(TokenRange(0,TokenRange.MaxToken))) // If the db contained other shards, the proper range should be set here.
   mysqlStorage.GarbageCollector.start()
   // TODO: with a dynamic cluster using replication, the shard ranges may change at runtime and should be updated through an observer.

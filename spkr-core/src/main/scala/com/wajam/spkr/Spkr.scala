@@ -14,12 +14,12 @@ import java.io.File
  */
 object Spkr extends App with Logging {
 
-  try {
-    // Init log4j. See 'log4j.configuration' in '/spkr/etc/' to edit config.
-    val logFile = System.getProperty("log4j.configuration", "file://" + new File("etc/log4j.properties").getCanonicalPath)
-    PropertyConfigurator.configureAndWatch(new URL(logFile).getFile, 5000L)
-    val config = SpkrConfig.fromDefaultConfigurationPath
-    val server: SpkServer = new SpkServer(config)
+    try {
+      // Init log4j. See 'log4j.configuration' in '/spkr/etc/' to edit config.
+      val logFile = System.getProperty("log4j.configuration", "file://" + new File("etc/log4j.properties").getCanonicalPath)
+      PropertyConfigurator.configureAndWatch(new URL(logFile).getFile, 5000L)
+      val config = SpkrConfig.fromDefaultConfigurationPath
+      val server: SpkServer = new SpkServer(config)
 
     sys.addShutdownHook(server.stop())
 

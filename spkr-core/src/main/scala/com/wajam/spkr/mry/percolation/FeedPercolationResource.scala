@@ -1,9 +1,8 @@
 package com.wajam.spkr.mry.percolation
 
-import com.wajam.spkr.mry.{MryCalls, MrySpkrDatabaseModel, MrySpkrDatabase}
-import com.wajam.scn.client.ScnClient
+import com.wajam.spkr.mry.MryCalls
 import com.wajam.spkr.mry.model._
-import com.wajam.mry.execution.{StringValue, ListValue, OperationApi, MapValue}
+import com.wajam.mry.execution.{StringValue, ListValue, MapValue}
 import com.wajam.mry.execution.Implicits._
 import com.wajam.nrv.Logging
 

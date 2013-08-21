@@ -74,7 +74,7 @@ trait MessageHelper {
     request.reply(Map(), RESPONSE_HEADERS, Map("error" -> "Conflict: %s".format(description)), code = 409)
   }
   protected def respondError(request: InMessage, description: String = " ") {
-    request.reply(Map(), RESPONSE_HEADERS, Map("error" -> "Other error: %s".format(description)), code = 400)
+    request.reply(Map(), RESPONSE_HEADERS, Map("error" -> "Error: %s".format(description)), code = 400)
   }
   protected def respondEmptySuccess(request: InMessage) {
     request.reply(Map(), RESPONSE_HEADERS, Map(), code = 200)

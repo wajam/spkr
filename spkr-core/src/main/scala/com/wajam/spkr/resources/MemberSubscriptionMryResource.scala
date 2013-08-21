@@ -71,9 +71,8 @@ class MemberSubscriptionMryResource(mryCalls: MryCalls) extends MryResource(mryC
   override def delete(request: InMessage) {
     info("Received DELETE request on member_subscription resource..." + request.toString)
 
-    val subscription = convertJsonValue(getJsonBody(request), model)
-    (request.parameters.get(model.username), subscription(model.subscriptionUsername).toString) match {
-      case (Some(MString(self)), target) => {
+    (request.parameters.get(model.username), request.parameters.get(model.subscriptionUsername)) match {
+      case (Some(MString(self)), Some(MString(target))) => {
         // We start by removing the user as a subscriber (generated through percolation)
         val deleteSubscription = mryCalls.deleteSubscriber(self, target)
         deleteSubscription.onFailure(handleFailures(request))

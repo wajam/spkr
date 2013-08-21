@@ -36,7 +36,7 @@ class SpkrService(name: String, database: MrySpkrDatabase, protocol: Protocol, s
   registerAction(new Action(SpkrService.member, handleException(memberResource.get), ActionMethod.GET))
   registerAction(new Action(SpkrService.memberSubscription, handleException(subscriptionResource.create), ActionMethod.POST))
   registerAction(new Action(SpkrService.memberSubscription, handleException(subscriptionResource.get), ActionMethod.GET))
-  registerAction(new Action(SpkrService.memberSubscription, handleException(subscriptionResource.delete), ActionMethod.DELETE))
+  registerAction(new Action(SpkrService.memberSubscriptionWithTarget, handleException(subscriptionResource.delete), ActionMethod.DELETE))
   registerAction(new Action(SpkrService.memberPostMessage, handleException(postMessageResource.create), ActionMethod.POST))
   registerAction(new Action(SpkrService.memberFeedMessage, handleException(feedMessageResource.get), ActionMethod.GET))
 
@@ -86,6 +86,7 @@ object SpkrService {
   val member = "/members"
   val memberWithId = "/members/:username"
   val memberSubscription = "/members/:username/subscriptions"
+  val memberSubscriptionWithTarget = "/members/:username/subscriptions/:subscription_username"
   val memberSubscriber = "/members/:username/subscribers"
   val memberFeedMessage = "/members/:username/feeds"
   val memberPostMessage = "/members/:username/messages"

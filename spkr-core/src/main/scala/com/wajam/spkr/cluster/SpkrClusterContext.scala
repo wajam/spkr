@@ -46,7 +46,7 @@ object SpkrClusterContext {
 
   val scnClientConfig = ScnClientConfig(
     executionRateInMs = 10,
-    timeoutInMs = 1000,
+    timeoutInMs = 3000,
     numExecutor = 100
   )
 

@@ -79,4 +79,43 @@ class MemberMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
         request.replyWithError(new IllegalArgumentException("A username must be specified."))
     }
   }
+
+  /**
+   * Updates a member's display name by username. For data consistency reasons, mry does not update fields. Instead in
+   * inserts a new record using the same key, but with updated values. The garbage collection system will eventually
+   * delete the old record.
+   */
+  override def update(request: InMessage) {
+    info("Received UPDATE request on member resource... " + request)
+    // Extract the parameter and the body from the query
+    val member = convertJsonValue(getJsonBody(request), model)
+    (getValidatedKey(request, model.username), member.get(model.displayName)) match {
+      case (username,Some(displayName)) => {
+        // First we obtain the current record from the store
+        val getMemberFuture = mryCalls.getMemberFromUsername(username.toString)
+        getMemberFuture.onFailure(handleFailures(request))
+        getMemberFuture.onSuccess {
+          case Seq(MapValue(member), _*) => {
+            // Then we change the display name from the record
+            val updatedMember = member.updated(model.displayName, displayName)
+            // And write the result to the store
+            val insertMemberFuture = mryCalls.insertMember(username.toString, updatedMember)
+            insertMemberFuture.onFailure {
+              case e: Exception => request.replyWithError(e)
+            }
+            insertMemberFuture.onSuccess {
+              case value => {
+                this.respond(request, MryJsonConverter.toJson(member))
+              }
+            }
+          }
+          case _ => {
+            this.respondNotFound(request, "Requested username not found")
+          }
+        }
+      }
+      case _ =>
+        request.replyWithError(new IllegalArgumentException("A username and display name must be specified."))
+    }
+  }
 }

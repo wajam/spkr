@@ -31,6 +31,7 @@ class SpkrService(name: String, database: MrySpkrDatabase, protocol: Protocol, s
 
   // Each possible http path is mapped with a unique Action, which calls the appropriate resource behavior.
   registerAction(new Action(SpkrService.memberWithId, handleException(memberResource.get), ActionMethod.GET))
+  registerAction(new Action(SpkrService.memberWithId, handleException(memberResource.update), ActionMethod.PUT))
   registerAction(new Action(SpkrService.member, handleException(memberResource.create), ActionMethod.POST))
   registerAction(new Action(SpkrService.member, handleException(memberResource.get), ActionMethod.GET))
   registerAction(new Action(SpkrService.memberSubscription, handleException(subscriptionResource.create), ActionMethod.POST))

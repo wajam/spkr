@@ -13,7 +13,7 @@ class TestMemberSubscriptionMryResource
 
   test("a new member should be subscribed to himself") {
     val newMember = generateMember
-    val newMembersUsername: String = newMember.get(Member.username).get.toString
+    val newMembersUsername: String = newMember(Member.username).toString
     insertMember(newMember)
 
     val (getCode, subscriptionData) = getSubscription(newMembersUsername)
@@ -22,8 +22,8 @@ class TestMemberSubscriptionMryResource
     val newMembersSubs = extractList(subscriptionData)
 
     newMembersSubs.size should be (1) // There should only be a single subscription for a new user
-    newMembersSubs.find(sub => sub.get(Subscription.username).get.toString == newMembersUsername
-      && sub.get(Subscription.subscriptionUsername).get.toString == newMembersUsername)
+    newMembersSubs.find(sub => sub(Subscription.username).toString == newMembersUsername
+      && sub(Subscription.subscriptionUsername).toString == newMembersUsername)
       .isDefined should be(true)
   }
 
@@ -31,8 +31,8 @@ class TestMemberSubscriptionMryResource
 
     val newMember1 = generateMember
     val newMember2 = generateMember
-    val newMembersUsername1: String = newMember1.get(Member.username).get.toString
-    val newMembersUsername2: String = newMember2.get(Member.username).get.toString
+    val newMembersUsername1: String = newMember1(Member.username).toString
+    val newMembersUsername2: String = newMember2(Member.username).toString
     insertMember(newMember1)
     insertMember(newMember2)
 
@@ -48,15 +48,15 @@ class TestMemberSubscriptionMryResource
     val member1SubscriptionsList = extractList(subscriptionData)
 
     // find subscription
-    member1SubscriptionsList.find(sub => sub.get(Member.username).get.toString == newMembersUsername1
-      && sub.get(Subscription.subscriptionUsername).get.toString == newMembersUsername2).isDefined should be(true)
+    member1SubscriptionsList.find(sub => sub(Member.username).toString == newMembersUsername1
+      && sub(Subscription.subscriptionUsername).toString == newMembersUsername2).isDefined should be(true)
   }
 
   test("deleting a subscription should remove it from the store") {
     val newMember1 = generateMember
     val newMember2 = generateMember
-    val newMembersUsername1: String = newMember1.get(Member.username).get.toString
-    val newMembersUsername2: String = newMember2.get(Member.username).get.toString
+    val newMembersUsername1: String = newMember1(Member.username).toString
+    val newMembersUsername2: String = newMember2(Member.username).toString
     insertMember(newMember1)
     insertMember(newMember2)
 

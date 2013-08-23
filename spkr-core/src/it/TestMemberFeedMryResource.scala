@@ -13,7 +13,7 @@ class TestMemberFeedMryResource
 
   test("It should be possible to get a user's feed") {
     val newMember = generateMember
-    val newMembersUsername: String = newMember.get(Member.username).get.toString
+    val newMembersUsername: String = newMember(Member.username).toString
     insertMember(newMember)
 
     getFeed(newMembersUsername)._1 should equal(200)
@@ -22,8 +22,8 @@ class TestMemberFeedMryResource
 
   test("A new message should appear in the author's feed (through percolation)") {
     val newMember = generateMember
-    val newMembersUsername: String = newMember.get(Member.username).get.toString
-    val newMembersDisplayName: String = newMember.get(Member.displayName).get.toString
+    val newMembersUsername: String = newMember(Member.username).toString
+    val newMembersDisplayName: String = newMember(Member.displayName).toString
     insertMember(newMember)
 
     extractList(getFeed(newMembersUsername)._2).size should equal(0)
@@ -37,9 +37,9 @@ class TestMemberFeedMryResource
   test("A new message should appear in the subscribers' feeds (through percolation)") {
     val author = generateMember
     val subscriber = generateMember
-    val authorUsername: String = author.get(Member.username).get.toString
-    val authorDisplayName: String = author.get(Member.displayName).get.toString
-    val subscriberUsername: String = subscriber.get(Member.username).get.toString
+    val authorUsername: String = author(Member.username).toString
+    val authorDisplayName: String = author(Member.displayName).toString
+    val subscriberUsername: String = subscriber(Member.username).toString
     insertMember(author)
     insertMember(subscriber)
 

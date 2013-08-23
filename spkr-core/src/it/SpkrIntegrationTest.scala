@@ -18,22 +18,18 @@ class SpkrIntegrationTest extends FunSuite with BeforeAndAfterAll with BeforeAnd
 
   protected def port: Int = config.getSpkListenPort
 
-  private var _mryCalls:MryCalls = null
-  protected def mryCalls = _mryCalls
+  protected val services = createServices()
 
-  protected var services: Services = null
-  override protected def beforeAll() {
-    // Empty the database
+  private def createServices(): Services = {
     val db:MrySpkrDatabase = new MrySpkrDatabase("IT_TEST", config)
     db.mysqlStorage.nuke()
     db.mysqlStorage.stop()
 
     // Create the Integration Test cluster
-    services = StaticSpkrClusterCreator.buildStaticCluster(config)
+    StaticSpkrClusterCreator.buildStaticCluster(config)
+  }
 
-    // Used by some tests to query MRY directly (when no api available)
-    _mryCalls = new MryCalls(services.mry,services.scnClient)
-
+  override protected def beforeAll() {
     // Start the cluster
     services.cluster.start()
     services.scnClient.start()

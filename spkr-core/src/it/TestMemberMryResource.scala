@@ -23,13 +23,13 @@ class TestMemberMryResource
     val (postCode, _) = insertMember(newMember)
     postCode should equal(200)
 
-    val (getCode, data) = getMember(newMember.get(Member.username).get.toString)
+    val (getCode, data) = getMember(newMember(Member.username).toString)
     getCode should equal(200)
 
     val username: String = MryJsonConverter.fromJson(data) match {
       case MapValue(m) => m.get(Member.username).getOrElse("Error").toString
       case _ => "Error"
     }
-    username should equal(newMember.get(Member.username).get.toString)
+    username should equal(newMember(Member.username).toString)
   }
 }

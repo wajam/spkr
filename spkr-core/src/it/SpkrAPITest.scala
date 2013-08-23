@@ -15,9 +15,9 @@ trait SpkrAPITest extends JsonHttpClientOperations {
 
   def generateSubscription(memberSubscribing: Map[String, Any], memberTargeted: Map[String, Any]) = {
     Map(
-      Subscription.username -> memberSubscribing.get(Member.username).get.toString,
-      Subscription.subscriptionUsername -> memberTargeted.get(Member.username).get.toString,
-      Subscription.subscriptionDisplayName -> memberTargeted.get(Member.displayName).get.toString
+      Subscription.username -> memberSubscribing(Member.username).toString,
+      Subscription.subscriptionUsername -> memberTargeted(Member.username).toString,
+      Subscription.subscriptionDisplayName -> memberTargeted(Member.displayName).toString
     )
   }
 

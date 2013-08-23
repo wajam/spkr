@@ -13,8 +13,8 @@ class TestMemberMessageMryResource
 
   test("A user posting a new messages should insert a message in the database") {
     val newMember = generateMember
-    val newMembersUsername: String = newMember.get(Member.username).get.toString
-    val newMembersDisplayName: String = newMember.get(Member.displayName).get.toString
+    val newMembersUsername: String = newMember(Member.username).toString
+    val newMembersDisplayName: String = newMember(Member.displayName).toString
     insertMember(newMember)
 
     // Insert generated message

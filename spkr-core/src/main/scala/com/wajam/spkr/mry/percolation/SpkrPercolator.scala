@@ -72,8 +72,8 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
         val tokenRanges = db.getMemberTokenRanges(member)
         info("Creating percolation tasks for member %s (%s).".format(member, tokenRanges))
         val memberTasks = Seq(
-          createTask(db.model.tableSubscription, registerPercolation("subscriber aggregation",subscriberPercolation), AcceptAll, member, continuous = false),
-          createTask(db.model.tablePostMessage, registerPercolation("feed aggregation",feedPercolation),AcceptAll, member, continuous = false)
+          createTask(db.model.tableSubscription, registerPercolation("subscriber aggregation", subscriberPercolation), AcceptAll, member, continuous = false),
+          createTask(db.model.tablePostMessage, registerPercolation("feed aggregation", feedPercolation),AcceptAll, member, continuous = false)
         )
         tasks += (member -> memberTasks)
 

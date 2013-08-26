@@ -159,13 +159,12 @@
 			// Remove existing subscription (needs to be bound to elements as they are created)
 			function removeSubscription(subscriptionTarget) {
 				// DELETE query
-				var subscription = findObject(member_subscriptions, 'subscription_username', subscriptionTarget);
 				$.ajax({
 					dataType: 'json',
-					url: serverIP() + '/members/' + $('#usernameKey').val() + '/subscriptions/',
+					url: serverIP() + '/members/' + $('#usernameKey').val() + '/subscriptions/' + subscriptionTarget,
 					contentType: "application/json",
 					type:'DELETE',
-					data: JSON.stringify(subscription, null, 2)
+					data: '{}'
 				})
 				.done(function(data) { reloadSubscriptions() })
 				.fail(function() { alert('Error, unable to unsubscribe.'); });
@@ -231,15 +230,6 @@
 				if (asc) return (a[prop] > b[prop]) ? 1 : ((a[prop] < b[prop]) ? -1 : 0);
 				else return (b[prop] > a[prop]) ? 1 : ((b[prop] < a[prop]) ? -1 : 0);
 			    });
-			}	
-			// JSon object seach helper
-			function findObject(data, field_name, value) {
-				var ret = {};
-				$.each(member_subscriptions, function(i, subscription)  {
-					if(subscription[field_name] == value)
-						ret = subscription;
-				});
-				return ret;
 			}		
 			// Feed refresh helper
 			function refreshFeed() {

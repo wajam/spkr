@@ -48,7 +48,7 @@ class MemberMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
       case Some(username) => {
         val insertMemberFuture = mryCalls.insertMember(username.toString, member)
         insertMemberFuture.onFailure {
-          case e: Exception => request.replyWithError(e)
+          case e: Exception => this.respondError(request, e.toString)
         }
         insertMemberFuture.onSuccess {
           case value => {
@@ -101,7 +101,7 @@ class MemberMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
             // And write the result to the store
             val insertMemberFuture = mryCalls.insertMember(username.toString, updatedMember)
             insertMemberFuture.onFailure {
-              case e: Exception => request.replyWithError(e)
+              case e: Exception => this.respondError(request, e.toString)
             }
             insertMemberFuture.onSuccess {
               case value => {
@@ -115,7 +115,7 @@ class MemberMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
         }
       }
       case _ =>
-        request.replyWithError(new IllegalArgumentException("A username and display name must be specified."))
+        this.respondError(request, "A username and display name must be specified.")
     }
   }
 }

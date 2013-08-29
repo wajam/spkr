@@ -28,6 +28,9 @@ class TestMemberFeedMryResource
 
     extractList(getFeed(newMembersUsername)._2).size should equal(0)
 
+    // Wait for the self-subscription to succeed
+    Thread.sleep(500)
+
     // Post a new message
     insertMessage(newMembersUsername,this.generateMessage(newMembersUsername,newMembersDisplayName))
 
@@ -52,7 +55,5 @@ class TestMemberFeedMryResource
 
     waitForCondition[Int](() => { extractList(getFeed(subscriberUsername)._2).size }, _ == 1)
   }
-
-
 
 }

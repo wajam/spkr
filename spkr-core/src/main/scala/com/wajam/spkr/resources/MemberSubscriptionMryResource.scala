@@ -6,6 +6,7 @@ import com.wajam.mry.execution._
 import com.wajam.mry.execution.Implicits._
 import com.wajam.spkr.mry.model.Subscription
 import com.wajam.spkr.json.MryJsonConverter
+import com.wajam.spkr.mry.MryExecutionContext
 
 class MemberSubscriptionMryResource(mryCalls: MryCalls) extends MryResource(mryCalls) {
 

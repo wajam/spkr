@@ -6,6 +6,7 @@ import com.wajam.mry.execution.Implicits._
 import com.wajam.spkr.json.MryJsonConverter
 import com.wajam.spkr.mry.model.{Subscription, Member}
 import com.wajam.mry.execution.MapValue
+import com.wajam.spkr.mry.MryExecutionContext
 
 /**
  *

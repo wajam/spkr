@@ -4,6 +4,7 @@ import com.wajam.spkr.mry.MryCalls
 import com.wajam.spkr.mry.model.{Subscriber, Subscription}
 import com.wajam.mry.execution.MapValue
 import com.wajam.mry.execution.Implicits._
+import com.wajam.spkr.mry.MryExecutionContext
 
 /**
  * Subscriber aggregation resource via percolation: This class builds the list of subscribers that are subscribed to

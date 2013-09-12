@@ -1,10 +1,10 @@
 package com.wajam.spkr.mry
 
 import com.wajam.scn.client.ScnClient
-import com.wajam.nrv.utils.{Promise, Future}
 import com.wajam.mry.execution.{Variable, OperationApi, Value}
 import com.wajam.mry.execution.Implicits._
 import com.wajam.spkr.mry.model.Model
+import scala.concurrent.{Future, Promise, ExecutionContext}
 
 /**
  * This class centralize all calls to the mry data store used by MryResources and PercolationResources.
@@ -13,34 +13,39 @@ import com.wajam.spkr.mry.model.Model
  */
 class MryCalls(val db: MrySpkrDatabase, val scn: ScnClient) extends InsertHelper {
 
-  def getFeedFromUsername(username: String): Future[scala.Seq[Value]] = {
+  def getFeedFromUsername(username: String)
+                         (implicit ec: ExecutionContext): Future[scala.Seq[Value]] = {
     db.execute(b => {
       b.returns(b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username)
         .from(MrySpkrDatabaseModel.FEED_MESSAGE_TABLE).get())
     })
   }
 
-  def getSubscribersFromUsername(username: String): Future[scala.Seq[Value]] = {
+  def getSubscribersFromUsername(username: String)
+                                (implicit ec: ExecutionContext): Future[scala.Seq[Value]] = {
     db.execute(b => {
       b.returns(b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username)
         .from(MrySpkrDatabaseModel.SUBSCRIBER_TABLE).get())
     })
   }
 
-  def getMemberFromUsername(username: String): Future[scala.Seq[Value]] = {
+  def getMemberFromUsername(username: String)
+                           (implicit ec: ExecutionContext): Future[scala.Seq[Value]] = {
     db.execute(b => {
       b.returns(b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username))
     })
   }
 
-  def getSubscriptionsFromUserName(username: String): Future[scala.Seq[Value]] = {
+  def getSubscriptionsFromUserName(username: String)
+                                  (implicit ec: ExecutionContext): Future[scala.Seq[Value]] = {
     db.execute(b => {
       b.returns(b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(username)
         .from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE).get())
     })
   }
 
-  def insertMessage(username: String, token: Long, model: Model, message: Map[String, Any]): Future[Value] = {
+  def insertMessage(username: String, token: Long, model: Model, message: Map[String, Any])
+                   (implicit ec: ExecutionContext): Future[Value] = {
     insertWithScnSequence(token, model, message) {
       _.from(MrySpkrDatabaseModel.STORE_TYPE).
         from(MrySpkrDatabaseModel.MEMBER_TABLE).
@@ -49,37 +54,43 @@ class MryCalls(val db: MrySpkrDatabase, val scn: ScnClient) extends InsertHelper
     }
   }
 
-  def insertMember(username: String, member: Map[String, Any]): Future[Value] = {
+  def insertMember(username: String, member: Map[String, Any])
+                  (implicit ec: ExecutionContext): Future[Value] = {
     insertWithKey(username, member) {
       _.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE)
     }
   }
 
-  def insertSubscription(subscriberUsername: String, targetUsername: String, subscription: Map[String, Any]): Future[Value] = {
+  def insertSubscription(subscriberUsername: String, targetUsername: String, subscription: Map[String, Any])
+                        (implicit ec: ExecutionContext): Future[Value] = {
     insertWithKey(targetUsername, subscription) {
       _.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(subscriberUsername).from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE)
     }
   }
-  def insertSubscriber(targetUsername: String, subscriberUsername: String, subscriber: Map[String, Any]): Future[Value] = {
+  def insertSubscriber(targetUsername: String, subscriberUsername: String, subscriber: Map[String, Any])
+                      (implicit ec: ExecutionContext): Future[Value] = {
     insertWithKey(subscriberUsername, subscriber){
       _.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(targetUsername).from(MrySpkrDatabaseModel.SUBSCRIBER_TABLE)
     }
   }
 
-  def insertFeedEntry(targetFeedUsername: String, token: Long, model: Model, feedMessage: Map[String, Any]): Future[Value] = {
+  def insertFeedEntry(targetFeedUsername: String, token: Long, model: Model, feedMessage: Map[String, Any])
+                     (implicit ec: ExecutionContext): Future[Value] = {
     insertWithScnSequence(token,model,feedMessage) {
       _.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(targetFeedUsername).from(MrySpkrDatabaseModel.FEED_MESSAGE_TABLE)
     }
   }
 
-  def deleteSubscriber(subscriberUsername: String, targetUsername: String): Future[scala.Seq[Value]] = {
+  def deleteSubscriber(subscriberUsername: String, targetUsername: String)
+                      (implicit ec: ExecutionContext): Future[scala.Seq[Value]] = {
     db.execute(b => {
       b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(targetUsername).
         from(MrySpkrDatabaseModel.SUBSCRIBER_TABLE).delete(subscriberUsername)
     })
   }
 
-  def deleteSubscription(subscriberUsername: String, targetUsername: String): Future[scala.Seq[Value]] = {
+  def deleteSubscription(subscriberUsername: String, targetUsername: String)
+                        (implicit ec: ExecutionContext): Future[scala.Seq[Value]] = {
     db.execute(b => {
       b.from(MrySpkrDatabaseModel.STORE_TYPE).from(MrySpkrDatabaseModel.MEMBER_TABLE).get(subscriberUsername).
         from(MrySpkrDatabaseModel.SUBSCRIPTION_TABLE).delete(targetUsername)

@@ -11,6 +11,7 @@ import scala.collection.mutable
 import com.wajam.scn.client.ScnClient
 import com.wajam.spnl.feeder.Feeder
 import com.wajam.nrv.Logging
+import com.wajam.spkr.mry.MryExecutionContext
 
 /**
  * This class uses spnl to schedule tasks that will manipulate data in the database based on events, using the logic

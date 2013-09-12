@@ -5,6 +5,7 @@ import com.wajam.spkr.mry.model._
 import com.wajam.mry.execution.{StringValue, ListValue, MapValue}
 import com.wajam.mry.execution.Implicits._
 import com.wajam.nrv.Logging
+import com.wajam.spkr.mry.MryExecutionContext
 
 /**
  *  Feed aggregation resource via percolation: This class builds the list of messages that are displayed on each user's

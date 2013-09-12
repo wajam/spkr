@@ -7,6 +7,7 @@ import com.wajam.spkr.mry.model.Feed
 import com.wajam.nrv.data.MString
 import com.wajam.mry.execution.ListValue
 import com.wajam.spkr.json.MryJsonConverter
+import com.wajam.spkr.mry.MryExecutionContext
 
 /**
  * Resource for feeds. A feed is the set of messages a given user wants to read based on his subscription.

@@ -33,6 +33,7 @@ object SpkrBuild extends Build {
     "com.wajam" %% "scn-core" % "0.1-SNAPSHOT",
     "com.wajam" %% "spnl-core" % "0.1-SNAPSHOT",
     "com.wajam" %% "mry-core" % "0.1-SNAPSHOT",
+    "com.wajam" %% "commons-core" % "0.1-SNAPSHOT",
     "com.google.guava" % "guava" % "12.0",
     "c3p0" % "c3p0" % "0.9.1.2",
     "mysql" % "mysql-connector-java" % "5.1.6",

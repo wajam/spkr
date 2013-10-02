@@ -1,7 +1,7 @@
 package com.wajam.spkr.cluster
 
 import com.wajam.nrv.service.{Switchboard, ActionSupportOptions}
-import com.wajam.nrv.tracing.{NullTraceRecorder, Tracer}
+import com.wajam.tracing.{NullTraceRecorder, Tracer}
 import com.wajam.scn.ScnConfig
 import com.wajam.scn.client.ScnClientConfig
 import com.wajam.nrv.cluster.LocalNode

@@ -5,9 +5,9 @@ import com.wajam.nrv.protocol.Protocol
 import com.wajam.nrv.data.InMessage
 import com.wajam.spkr.resources._
 import com.wajam.scn.client.ScnClient
-import com.wajam.nrv.utils.{SynchronizedIdGenerator, TimestampIdGenerator}
-import com.wajam.nrv.utils.timestamp.Timestamp
+import com.wajam.commons.timestamp.Timestamp
 import com.wajam.nrv.Logging
+import com.wajam.commons.{SynchronizedIdGenerator, TimestampIdGenerator}
 
 /**
  * Concrete service implementation for the http_api service. This service handles http requests through a REST API by

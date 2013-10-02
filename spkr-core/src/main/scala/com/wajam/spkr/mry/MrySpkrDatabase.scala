@@ -4,8 +4,8 @@ import com.wajam.mry.{Database, ConsistentDatabase}
 import com.wajam.mry.storage.mysql.{Table, Model, MysqlStorageConfiguration, MysqlStorage}
 import com.wajam.spkr.config.SpkrConfig
 import com.wajam.nrv.service.TokenRange
-import com.wajam.nrv.utils.Event
 import com.wajam.nrv.consistency.{MemberConsistencyState, ConsistencyStateTransitionEvent}
+import com.wajam.commons.Event
 
 
 /**

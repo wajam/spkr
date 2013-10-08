@@ -5,7 +5,7 @@ import com.wajam.nrv.protocol.Protocol
 import com.wajam.nrv.data.InMessage
 import com.wajam.spkr.resources._
 import com.wajam.scn.client.ScnClient
-import com.wajam.nrv.Logging
+import com.wajam.commons.Logging
 import com.wajam.commons.SynchronizedIdGenerator
 import com.wajam.nrv.utils.TimestampIdGenerator
 import com.wajam.nrv.utils.timestamp.Timestamp

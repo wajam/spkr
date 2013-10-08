@@ -5,7 +5,7 @@ import org.apache.commons.configuration.{Configuration, PropertiesConfiguration}
 import org.junit.Ignore
 import com.wajam.spkr.config.SpkrConfig
 import com.wajam.spkr.cluster.{Services, StaticSpkrClusterCreator}
-import com.wajam.nrv.Logging
+import com.wajam.commons.Logging
 import com.wajam.spkr.mry.{MryCalls, MrySpkrDatabase}
 
 /**

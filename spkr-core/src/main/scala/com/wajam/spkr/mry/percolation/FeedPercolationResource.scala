@@ -4,7 +4,7 @@ import com.wajam.spkr.mry.MryCalls
 import com.wajam.spkr.mry.model._
 import com.wajam.mry.execution.{StringValue, ListValue, MapValue}
 import com.wajam.mry.execution.Implicits._
-import com.wajam.nrv.Logging
+import com.wajam.commons.Logging
 import com.wajam.spkr.mry.MryExecutionContext
 
 /**

@@ -3,7 +3,7 @@ package com.wajam.spkr
 import com.wajam.spkr.config.SpkrConfig
 import org.apache.log4j.PropertyConfigurator
 import java.net.URL
-import com.wajam.nrv.Logging
+import com.wajam.commons.Logging
 import com.wajam.spkr.cluster.{ZookeeperSpkrClusterCreator, StaticSpkrClusterCreator, Services}
 import java.io.File
 

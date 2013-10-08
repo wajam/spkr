@@ -1,7 +1,7 @@
 package com.wajam.spkr
 
 import scala.concurrent.ExecutionContext
-import com.wajam.nrv.Logging
+import com.wajam.commons.Logging
 
 package object mry {
 

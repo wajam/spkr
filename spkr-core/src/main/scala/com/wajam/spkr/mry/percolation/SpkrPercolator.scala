@@ -10,7 +10,7 @@ import com.wajam.mry.execution.MapValue
 import scala.collection.mutable
 import com.wajam.scn.client.ScnClient
 import com.wajam.spnl.feeder.Feeder
-import com.wajam.nrv.Logging
+import com.wajam.commons.Logging
 import com.wajam.spkr.mry.MryExecutionContext
 
 /**

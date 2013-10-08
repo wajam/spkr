@@ -1,7 +1,7 @@
 package com.wajam.spkr.cluster
 
 import com.wajam.spkr.config.SpkrConfig
-import com.wajam.nrv.Logging
+import com.wajam.commons.Logging
 import com.wajam.nrv.cluster.{LocalNode, Cluster, StaticClusterManager}
 import com.wajam.spkr.mry.{SpkrService, MrySpkrDatabase}
 import com.wajam.scn.Scn

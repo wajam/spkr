@@ -7,7 +7,7 @@ import com.wajam.scn.client.ScnClient
 import com.wajam.spkr.mry.model.{PropertyType, Model}
 import net.liftweb.json._
 import com.wajam.nrv.data.{InMessage, MList, MString}
-import com.wajam.nrv.Logging
+import com.wajam.commons.Logging
 import com.wajam.nrv.utils.{Promise, Future}
 
 /**

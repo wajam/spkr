@@ -65,7 +65,7 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
   // Used to store all tasks that are currently running in spnl. This will be used to prevent registering the same task twice.
   private val tasks: mutable.Map[ServiceMember, Seq[Task]] = mutable.Map()
 
-  def AcceptAll: Feeder.FeederPredicate = (_: TaskData) => true
+  def AcceptAll: Feeder.FeederPredicate = (_: FeederData) => true
 
   private def initializeMemberTasks(member: ServiceMember) {
     tasks.synchronized {

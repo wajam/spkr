@@ -102,11 +102,11 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
       info("Percolating on %s with this message: %s".format(name,request.message))
 
       // Extracts the data (keys, values, token, timestamp)
-      val data = request.message.getData[Map[String, Any]]
+      val data = request.message.getData[TaskData]
 
       // Extract the keys
-      val keys: Seq[String] = data.get(TableAllLatestFeeder.Keys).get match {
-        case k: Seq[String] => k
+      val keys: Seq[String] = data.values(TableAllLatestFeeder.Keys) match {
+        case k: Seq[_] => k.asInstanceOf[Seq[String]]
         case _ =>  throw new IllegalArgumentException()
       }
 
@@ -114,17 +114,15 @@ class SpkrPercolator(db: MrySpkrDatabase, scn: ScnClient, spnlPersistence: TaskP
       // In the case of mutation percolation, the data is a map containing two records: "old_data" and "new_data".
       // Since we only aggregate on insert, we'll assume "old_data" is always worth None to simplify the percolation.
       // see "mutations map" in mry.TableTimelineFeeder for more info on the structure.
-      val newRecord = (data.get("new_value").get, data.get("old_value").get) match {
+      val newRecord = (data.values("new_value"), data.values("old_value")) match {
         case (Some(m: MapValue), None) => Some(m) // case: mutation percolation (INSERT), we only want the new record for percolation
         case (Some(m: MapValue), Some(_)) => Some(m) // case: mutation percolation (UPDATE)
         case (None, Some(m: MapValue)) =>  None // case: mutation percolation (DELETE), don't do anything
-        case _ => Some(data.get(TableAllLatestFeeder.Value)) // case: continuous percolation, extract the the record
+        case _ => Some(data.values(TableAllLatestFeeder.Value)) // case: continuous percolation, extract the the record
       }
 
       //Extract the token
-      val token: Long = data.get(TableAllLatestFeeder.Token).get match {
-        case t: String => t.toLong
-      }
+      val token: Long = data.token
 
       //apply the specified Percolation Resource Task logic to the selected data
       try {

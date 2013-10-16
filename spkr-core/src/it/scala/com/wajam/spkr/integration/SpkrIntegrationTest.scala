@@ -6,7 +6,7 @@ import org.junit.Ignore
 import com.wajam.spkr.config.SpkrConfig
 import com.wajam.spkr.cluster.{Services, StaticSpkrClusterCreator}
 import com.wajam.commons.Logging
-import com.wajam.spkr.mry.{MryCalls, MrySpkrDatabase}
+import com.wajam.spkr.mry.MrySpkrDatabase
 
 /**
  *
@@ -40,6 +40,6 @@ class SpkrIntegrationTest extends FunSuite with BeforeAndAfterAll with BeforeAnd
   }
 
   def loadConfiguration(): Configuration = {
-    new PropertiesConfiguration( "etc/spkr.integration.test.properties")
+    new PropertiesConfiguration("etc/spkr.integration.test.properties")
   }
 }

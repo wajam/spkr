@@ -1,7 +1,7 @@
 package com.wajam.spkr.integration
 
 import org.scalatest.BeforeAndAfterEach
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.{Matchers => ShouldMatchers}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import com.wajam.mry.execution.MapValue

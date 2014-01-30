@@ -40,7 +40,7 @@ object SpkrBuild extends Build {
     "spy" % "spymemcached" % "2.6",
     "nl.grons" %% "metrics-scala" % "2.2.0" exclude("org.slf4j", "slf4j-api"),
     "net.liftweb" %% "lift-json" % "2.5-RC4",
-    "org.scalatest" %% "scalatest" % "1.9.1" % "test,it",
+    "org.scalatest" %% "scalatest" % "2.0" % "test,it",
     "junit" % "junit" % "4.10" % "test,it",
     "org.mockito" % "mockito-core" % "1.9.0" % "test,it"
   )
